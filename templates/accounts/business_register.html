@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Registrer bedrift | Raildrops{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title mb-4 text-center">Registrer bedriftskonto</h2>
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_username" class="form-label">Brukernavn</label>
+                                {{ form.username }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_email" class="form-label">E-post</label>
+                                {{ form.email }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_first_name" class="form-label">Fornavn</label>
+                                {{ form.first_name }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_last_name" class="form-label">Etternavn</label>
+                                {{ form.last_name }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_password1" class="form-label">Passord</label>
+                                {{ form.password1 }}
+                                {% if form.password1.help_text %}
+                                    <div class="form-text">{{ form.password1.help_text }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_password2" class="form-label">Bekreft passord</label>
+                                {{ form.password2 }}
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <label for="id_business_name" class="form-label">Bedriftsnavn</label>
+                            {{ form.business_name }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Beskrivelse</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_logo" class="form-label">Logo (valgfritt)</label>
+                            {{ form.logo }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_website" class="form-label">Nettside (valgfritt)</label>
+                            {{ form.website }}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Registrer bedrift</button>
+                    </form>
+                    <div class="mt-3 text-center">
+                        Allerede medlem? <a href="{% url 'login' %}">Logg inn</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

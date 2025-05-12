@@ -1,0 +1,64 @@
+/* Raildrops - Tilpasset stil for base.html og hele prosjektet */
+
+:root {
+  --raildrops-blue: #004c97;
+  --raildrops-yellow: #ffde59;
+  --raildrops-dark: #1b1b1b;
+}
+
+
+body {
+  background-color: #f8fafc;
+  color: var(--raildrops-dark);
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.card {
+  border-radius: 1rem;
+  border: none;
+}
+
+.btn-primary {
+  background-color: var(--raildrops-blue);
+  border-color: var(--raildrops-blue);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+  background-color: var(--raildrops-yellow);
+  color: var(--raildrops-dark);
+  border-color: var(--raildrops-yellow);
+}
+
+/* Universell utforming: bedre fokusmarkering */
+:focus {
+  outline: 2px solid var(--raildrops-yellow) !important;
+  outline-offset: 2px;
+}
+
+
+/* Footer */
+.footer {
+  background: #e9ecef;
+  color: #888;
+  font-size: 0.95rem;
+}
+
+/* Meldinger */
+.alert-success {
+  background-color: #e6f7e6;
+  color: #185c18;
+}
+
+.alert-danger, .alert-error {
+  background-color: #ffe6e6;
+  color: #b30000;
+}
+
+/* Tilpass skjemaelementer for bedre lesbarhet */
+.form-label {
+  font-weight: 500;
+}
+
+input, select, textarea {
+  border-radius: 0.4rem !important;
+}

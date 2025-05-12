@@ -1,0 +1,75 @@
+/* Raildrops - Tilpasset stil for base.html og hele prosjektet */
+
+:root {
+  --raildrops-blue: #004c97;
+  --raildrops-yellow: #ffde59;
+  --raildrops-dark: #1b1b1b;
+}
+
+body {
+  background-color: #f8fafc;
+  color: var(--raildrops-dark);
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.navbar {
+  background: var(--raildrops-blue) !important;
+}
+
+.navbar .navbar-brand, .navbar .nav-link {
+  color: #fff !important;
+  font-weight: 500;
+}
+
+.navbar .nav-link.active, .navbar .nav-link:focus, .navbar .nav-link:hover {
+  color: var(--raildrops-yellow) !important;
+}
+
+.card {
+  border-radius: 1rem;
+  border: none;
+}
+
+.btn-primary {
+  background-color: var(--raildrops-blue);
+  border-color: var(--raildrops-blue);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+  background-color: var(--raildrops-yellow);
+  color: var(--raildrops-dark);
+  border-color: var(--raildrops-yellow);
+}
+
+/* Universell utforming: bedre fokusmarkering */
+:focus {
+  outline: 2px solid var(--raildrops-yellow) !important;
+  outline-offset: 2px;
+}
+
+/* Footer */
+.footer {
+  background: linear-gradient(135deg, #0d0d1a, #1a1a2e, #2e2e4d);
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+/* Meldinger */
+.alert-success {
+  background-color: #e6f7e6;
+  color: #185c18;
+}
+
+.alert-danger, .alert-error {
+  background-color: #ffe6e6;
+  color: #b30000;
+}
+
+/* Tilpass skjemaelementer for bedre lesbarhet */
+.form-label {
+  font-weight: 500;
+}
+
+input, select, textarea {
+  border-radius: 0.4rem !important;
+}

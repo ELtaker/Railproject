@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Giveaways | Raildrops{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Giveaways</h1>
+    <form method="get" class="row g-2 mb-4 justify-content-center">
+        <div class="col-md-3">
+            <input type="text" name="city" value="{{ selected_city }}" class="form-control" placeholder="Sted (f.eks. Oslo)">
+        </div>
+        <div class="col-md-3">
+            <input type="text" name="postal_code" value="{{ selected_postal_code }}" class="form-control" placeholder="Postnummer">
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary">Filtrer</button>
+        </div>
+        <div class="col-md-2 d-grid">
+            <a href="?" class="btn btn-outline-secondary">Nullstill</a>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="button" class="btn btn-success" id="my-location-btn">Min lokasjon</button>
+        </div>
+        <div class="col-md-2 d-grid">
+            <a href="?all_dates=1" class="btn btn-outline-info{% if all_dates %} active{% endif %}">Alle datoer</a>
+        </div>
+    </form>
+    <div id="location-error" class="alert alert-warning d-none" role="alert"></div>
+    <div class="row g-4">
+        {% for giveaway in giveaways %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    {% if giveaway.image %}
+                        <img src="{{ giveaway.image.url }}" class="card-img-top" alt="{{ giveaway.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ giveaway.title }}</h5>
+                        <div class="mb-2 text-muted small">
+                            {{ giveaway.business.name }}<br>
+                            {{ giveaway.business.city }}{% if giveaway.business.postal_code %}, {{ giveaway.business.postal_code }}{% endif %}
+                        </div>
+                        <p class="card-text">{{ giveaway.description|truncatewords:15 }}</p>
+                        <div class="mb-2 small">Trekningsdato: {{ giveaway.end_date|date:"d.m.Y H:i" }}</div>
+                        <a href="{% url 'business_public_profile' giveaway.business.pk %}" class="btn btn-link p-0">Se bedrift</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">Ingen giveaways funnet for valgt filter.</div>
+            </div>
+        {% endfor %}
+    </div>
+    {% if is_paginated %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Forrige</a></li>
+                {% endif %}
+                <li class="page-item disabled"><span class="page-link">Side {{ page_obj.number }} av {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Neste</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+<script>
+// "Min lokasjon"-knapp: Forsøk å hente brukerens geolokasjon og autofyll postnummer/sted
+const myLocationBtn = document.getElementById('my-location-btn');
+const locationError = document.getElementById('location-error');
+if(myLocationBtn) {
+    myLocationBtn.addEventListener('click', function() {
+        locationError.classList.add('d-none');
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.address) {
+                            if(data.address.postcode) {
+                                document.querySelector('input[name="postal_code"]').value = data.address.postcode;
+                            }
+                            if(data.address.city) {
+                                document.querySelector('input[name="city"]').value = data.address.city;
+                            } else if(data.address.town) {
+                                document.querySelector('input[name="city"]').value = data.address.town;
+                            } else if(data.address.village) {
+                                document.querySelector('input[name="city"]').value = data.address.village;
+                            }
+                        }
+                    })
+                    .catch(() => {
+                        locationError.textContent = 'Klarte ikke å hente din lokasjon.';
+                        locationError.classList.remove('d-none');
+                    });
+            }, function() {
+                locationError.textContent = 'Du må tillate posisjon for å bruke denne funksjonen.';
+                locationError.classList.remove('d-none');
+            });
+        } else {
+            locationError.textContent = 'Nettleseren din støtter ikke geolokasjon.';
+            locationError.classList.remove('d-none');
+        }
+    });
+}
+</script>
+{% endblock %}

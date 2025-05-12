@@ -1,0 +1,75 @@
+# WINDSURF RULES FOR DJANGO WEB APP
+
+[Python]
+lint = flake8
+max-line-length = 120
+require-type-hints = true
+no-wildcard-imports = true
+no-print-statements = true
+require-logging = true
+require-docstrings = true
+
+[Django]
+modular-app-structure = true
+no-business-logic-in-config = true        # Ingen forretningslogikk i config/, kun settings og URL-routing
+use-dotenv = true
+require-str-method = true
+prefer-class-based-views = true
+template-dir = templates/
+static-dir = static/
+require-modelforms = true                 # Alle create/update-former skal bruke ModelForm
+require-form-clean-methods = true         # Validering skal skje i clean() og clean_<field>()
+require-permissions-modules = true
+require-services-modules = true
+require-tests-for-apps = true
+require-app-permissions-module = true     # Hver app skal ha permissions.py hvis relevant
+require-app-services-module = true        # Hver app skal ha services.py hvis relevant
+require-app-tests-directory = true        # Hver app skal ha tests/-mappe
+
+[HTML]
+require-html5-doctype = true
+require-semantic-html = true
+require-bootstrap-version = 5
+require-accessibility = true              # All HTML skal være universelt utformet (a11y)
+
+[CSS]
+require-css3 = true
+custom-css-dir = static/css/
+no-inline-css = true                      # Ingen inline CSS
+require-stylelint = true
+
+[Bootstrap]
+require-bootstrap-version = 5
+no-unnecessary-bootstrap-overrides = true
+prefer-bootstrap-components = true
+require-responsive-design = true
+
+[Docker]
+require-official-python-image = true
+no-secrets-in-dockerfile = true
+require-dockerignore = true
+require-hadolint = true
+
+[Env]
+no-env-in-git = true
+require-env-example = true
+no-secrets-in-code = true
+require-validate-env = true
+
+[General]
+require-meaningful-comments = true
+modular-code = true
+require-tests-before-merge = true
+require-pre-commit-hooks = true
+require-requirements-txt = true
+require-readme = true
+require-onboarding-doc = true
+require-ci-cd-pipeline = true
+require-gitignore = true
+require-utils-directory = true            # Fellesfunksjoner (f.eks. logging) skal ligge i utils/
+require-updated-readme = true             # README skal alltid være oppdatert og forklare prosjektstruktur og regler
+require-updated-onboarding-doc = true     # Onboarding-dokument skal alltid være oppdatert
+
+[Structure]
+require-modular-code = true
+require-app-tests-directory = true        # Hver app skal ha egen tests/-mappe med relevante tester

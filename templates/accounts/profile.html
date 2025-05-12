@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Min profil | Raildrops{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title mb-4 text-center">Min profil</h2>
+                    <dl class="row">
+                        <dt class="col-sm-4">Brukernavn</dt>
+                        <dd class="col-sm-8">{{ user.username }}</dd>
+                        <dt class="col-sm-4">E-post</dt>
+                        <dd class="col-sm-8">{{ user.email }}</dd>
+                        <dt class="col-sm-4">By</dt>
+                        <dd class="col-sm-8">{{ user.city|default:'-' }}</dd>
+                        <dt class="col-sm-4">Fornavn</dt>
+                        <dd class="col-sm-8">{{ user.first_name }}</dd>
+                        <dt class="col-sm-4">Etternavn</dt>
+                        <dd class="col-sm-8">{{ user.last_name }}</dd>
+                        <dt class="col-sm-4">Medlem?</dt>
+                        <dd class="col-sm-8">Medlem: {% if not user.business_profile %}Ja{% else %}Nei{% endif %}</dd>
+                        <dt class="col-sm-4">Brukertype</dt>
+                        <dd class="col-sm-8">
+                            {% if is_member %}
+                                Medlem
+                            {% elif is_business %}
+                                Bedrift
+                            {% else %}
+                                Ukjent
+                            {% endif %}
+                        </dd>
+                    </dl>
+                    <div class="text-center mt-4 d-flex flex-column flex-md-row justify-content-center gap-2">
+                        <a href="{% url 'profile_edit' %}" class="btn btn-primary">Rediger profil</a>
+                        <a href="/logout/" class="btn btn-outline-secondary">Logg ut</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

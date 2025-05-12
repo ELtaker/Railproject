@@ -1,0 +1,32 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/giveaway_cards.css' %}">
+<section class="card-scroll">
+    <div class="scroll-container">
+        {% for giveaway in giveaways %}
+        <article class="card" onclick="window.location.href='{% url 'giveaways:giveaway_detail' giveaway.pk %}'" style="cursor:pointer;">
+            {% if giveaway.image %}
+                <img src="{{ giveaway.image.url }}" alt="Premiebilde" class="card-image" />
+            {% else %}
+                <img src="{% static 'img/default_giveaway.png' %}" alt="Premiebilde" class="card-image" />
+            {% endif %}
+            <div class="card-content">
+                <h3 class="card-title">{{ giveaway.title }}</h3>
+                <p class="card-value">Verdi: {{ giveaway.prize_value|default:'?' }} NOK</p>
+                <div class="d-flex align-items-center mb-2">
+                    {% if giveaway.business.logo %}
+                        <img src="{{ giveaway.business.logo.url }}" alt="Logo {{ giveaway.business.name }}" style="height:32px;width:32px;object-fit:cover;border-radius:50%;margin-right:0.5rem;">
+                    {% endif %}
+                    <span style="font-size:0.95rem;">{{ giveaway.business.name }}</span>
+                </div>
+                <div class="card-footer">
+                    <span>⏳ {{ giveaway.end_date|timesince }} igjen</span>
+                    <span class="badge">{{ giveaway.business.city }}, {{ giveaway.business.postal_code }}</span>
+                </div>
+                <div class="card-footer mt-1">
+                    <span>Deltakere: {{ giveaway.entries.count }}</span>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>

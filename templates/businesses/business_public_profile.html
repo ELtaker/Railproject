@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ business.name }} | Bedriftsprofil | Raildrops{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            {% if can_create_giveaway %}
+            <div class="mb-3 text-end">
+                <a href="{% url 'giveaways:create' %}" class="btn btn-success"><i class="bi bi-gift"></i> Opprett giveaway</a>
+            </div>
+            {% endif %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if business.logo %}
+                            <img src="{{ business.logo.url }}" alt="Logo {{ business.name }}" class="rounded me-3" style="max-height: 80px;">
+                        {% endif %}
+                        <div>
+                            <h2 class="card-title mb-0">{{ business.name }}</h2>
+                            <div class="text-muted small">{{ business.city }}{% if business.postal_code %}, {{ business.postal_code }}{% endif %}</div>
+                        </div>
+                    </div>
+                    {% if business.description %}
+                        <p class="mb-2">{{ business.description }}</p>
+                    {% endif %}
+                    {% if business.website %}
+                        <a href="{{ business.website }}" class="btn btn-outline-primary btn-sm mb-2" target="_blank" rel="noopener">Nettside</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title mb-3">Aktive giveaways</h4>
+                    {% if giveaways %}
+                        <div class="row g-3">
+                            {% for giveaway in giveaways %}
+                                <div class="col-md-6">
+                                    <div class="card h-100">
+                                        {% if giveaway.image %}
+                                            <img src="{{ giveaway.image.url }}" class="card-img-top" alt="{{ giveaway.title }}">
+                                        {% endif %}
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ giveaway.title }}</h5>
+                                            <p class="card-text small">{{ giveaway.description|truncatewords:20 }}</p>
+                                            <div class="text-muted small mb-2">Trekningsdato: {{ giveaway.end_date|date:"d.m.Y H:i" }}</div>
+                                            <a href="{% url 'giveaway_detail' giveaway.pk %}" class="btn btn-primary btn-sm">Se giveaway</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-0">Ingen aktive giveaways for denne bedriften.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

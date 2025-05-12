@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Bedriftsprofil | Raildrops{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title mb-4 text-center">Bedriftsprofil</h2>
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">Bedriftsnavn</label>
+                            {{ form.name }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Beskrivelse</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_logo" class="form-label">Logo</label><br>
+                            {% if form.instance.logo %}
+                                <img src="{{ form.instance.logo.url }}" alt="Logo" class="img-fluid mb-2 rounded" style="max-height: 100px;">
+                            {% endif %}
+                            {{ form.logo }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_postal_code" class="form-label">Postnummer</label>
+                                {{ form.postal_code }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_city" class="form-label">Sted</label>
+                                {{ form.city }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_website" class="form-label">Nettside</label>
+                            {{ form.website }}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Lagre endringer</button>
+                    </form>
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'password_change' %}" class="btn btn-outline-secondary">Endre passord</a>
+                        <a href="{% url 'profile' %}" class="btn btn-link">Tilbake til profil</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

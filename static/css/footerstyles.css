@@ -1,0 +1,28 @@
+/* Raildrops Footer Styling */
+.footer-wrapper {
+    font-family: 'Helvetica Neue', sans-serif;
+  }
+  
+  .footer-link {
+    color: #fff;
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+  }
+  
+  .footer-link:hover {
+    color: #bbb;
+    text-decoration: underline;
+  }
+  
+  .disclaimer {
+    color: #ccc;
+  }
+  
+  .social-icons a {
+    transition: color 0.3s ease-in-out;
+  }
+  
+  .social-icons a:hover {
+    color: #adb5bd; /* Bootstrap's gray-400 */
+  }
+  

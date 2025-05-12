@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Raildrops – Aktuelle Giveaways{% endblock %}
+{% block content %}
+<h1 class="mb-4 text-center">Giveaways nær deg</h1>
+{% include "giveaways/giveaway_horizontal_scroll.html" with giveaways=giveaways %}
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Opprett giveaway | Raildrops{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title mb-4 text-center">Opprett giveaway</h2>
+                    <div class="mb-4 text-center">
+                        {% if business.logo %}
+                            <img src="{{ business.logo.url }}" alt="Logo {{ business.name }}" class="rounded mb-2" style="max-height: 70px;">
+                        {% endif %}
+                        <h4 class="mb-0">{{ business.name }}</h4>
+                    </div>
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        <div class="mb-3">
+                            <label for="id_title" class="form-label">Premienavn</label>
+                            {{ form.title }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_image" class="form-label">Premiebilde</label>
+                            {{ form.image }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_prize_value" class="form-label">Premieverdi (kr)</label>
+                            {{ form.prize_value }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Beskrivelse</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_start_date" class="form-label">Startdato og tid</label>
+                                {{ form.start_date }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_end_date" class="form-label">Trekningsdato og tid</label>
+                                {{ form.end_date }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_signup_question" class="form-label">Påmeldingsspørsmål</label>
+                            {{ form.signup_question }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Svaralternativer (2-4)</label>
+                            <div class="form-check">
+                                {{ form.option_1 }}
+                            </div>
+                            <div class="form-check">
+                                {{ form.option_2 }}
+                            </div>
+                            <div class="form-check">
+                                {{ form.option_3 }}
+                            </div>
+                            <div class="form-check">
+                                {{ form.option_4 }}
+                            </div>
+                            <div class="form-text">Svarene vises som radioknapper for deltakerne.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Opprett giveaway</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
