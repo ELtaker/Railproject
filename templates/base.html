@@ -37,19 +37,19 @@
                         <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">Profil</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logg ut</a></li>
                     {% elif user.is_authenticated and is_business %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:dashboard' %}">Bedriftsdashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'giveaways:create' %}">Opprett giveaway</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:business_dashboard' %}">Bedriftsdashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'giveaways:giveaway_create' %}">Opprett giveaway</a></li>
                         <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logg ut</a></li>
                     {% else %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarCompanyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Bedrift</a>
                             <ul class="dropdown-menu" aria-labelledby="navbarCompanyDropdown">
-                                <li><a class="dropdown-item" href="{% url 'accounts:company_register' %}">Registrer bedrift</a></li>
-                                <li><a class="dropdown-item" href="{% url 'accounts:company_login' %}">Logg inn for bedrift</a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:business-register' %}">Registrer bedrift</a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:business-login' %}">Logg inn for bedrift</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member_register' %}">Bli Medlem</a></li>
-                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member_login' %}">Logg inn</a></li>
+                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member-register' %}">Bli Medlem</a></li>
+                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member-login' %}">Logg inn</a></li>
                     {% endif %}
                 </ul>
             </div>
@@ -68,17 +68,17 @@
                         <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:profile' %}">Profil</a>
                         <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:logout' %}">Logg ut</a>
                     {% elif user.is_authenticated and is_business %}
-                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:dashboard' %}">Dashboard</a>
-                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'giveaways:create' %}">Opprett giveaway</a>
+                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:business_dashboard' %}">Bedriftsdashboard</a>
+                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'giveaways:giveaway_create' %}">Opprett giveaway</a>
                         <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:logout' %}">Logg ut</a>
                     {% else %}
                         <a class="btn btn-outline-main w-100 mb-2" href="#">Lokasjon</a>
                         <a class="btn btn-outline-main w-100 mb-2" href="#">Features</a>
                         <a class="btn btn-outline-main w-100 mb-2" href="#">Om oss</a>
                         <a class="btn btn-outline-main w-100 mb-2" href="#">Bedrift</a>
-                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'accounts:company_register' %}">Bedrift</a>
-                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'accounts:member_register' %}">Bli Medlem</a>
-                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'accounts:member_login' %}">Logg inn</a>
+                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'accounts:business-register' %}">Bedrift</a>
+                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'accounts:member-register' %}">Bli Medlem</a>
+                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'accounts:member-login' %}">Logg inn</a>
                     {% endif %}
                 </div>
             </div>
@@ -120,7 +120,7 @@
           <ul class="list-unstyled">
             <li><a href="/competition-list" class="footer-link">Premier</a></li>
             <li><a href="/winner-list" class="footer-link">Vinnere</a></li>
-            <li><a href="{% url 'accounts:member_login' %}" class="footer-link">Medlem</a></li>
+            <li><a href="{% url 'accounts:member-login' %}" class="footer-link">Medlem</a></li>
           </ul>
         </div>
         <div class="col-12 col-md-4">

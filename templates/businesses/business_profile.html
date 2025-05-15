@@ -42,8 +42,10 @@
                         <button type="submit" class="btn btn-primary w-100">Lagre endringer</button>
                     </form>
                     <div class="mt-4 text-center">
+                        {% if is_business %}
                         <a href="{% url 'password_change' %}" class="btn btn-outline-secondary">Endre passord</a>
-                        <a href="{% url 'profile' %}" class="btn btn-link">Tilbake til profil</a>
+                        {% endif %}
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-link">Tilbake til profil</a>
                     </div>
                 </div>
             </div>

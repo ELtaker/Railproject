@@ -55,6 +55,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'accounts.context_processors.user_roles',
             ],
         },
     },
@@ -75,9 +76,8 @@ AUTH_USER_MODEL = 'accounts.User'
 AUTHENTICATION_BACKENDS = [
     'accounts.backends.EmailBackend',  # eller tilsvarende
     'django.contrib.auth.backends.ModelBackend',
-    'accounts.backends.CompanyAuthBackend',
 ]
-LOGIN_URL = 'accounts:member_login'
+LOGIN_URL = 'accounts:member-login'
 LOGOUT_REDIRECT_URL = 'home'
 LOGIN_REDIRECT_URL = 'accounts:dashboard'
 

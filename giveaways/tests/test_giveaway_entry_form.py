@@ -18,7 +18,7 @@ class TestEntryForm(TestCase):
             city="Oslo"
         )
         self.business = Business.objects.create(
-            user=self.business_user, name="TestBedrift", city="Oslo", postal_code="1234"
+            user=self.business_user, admin_id=self.business_user.id, name="TestBedrift", city="Oslo", postal_code="1234"
         )
         # Opprett medlem og ikke-medlem med unike brukernavn/e-post
         self.member = User.objects.create_user(

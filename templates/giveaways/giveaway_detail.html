@@ -1,4 +1,8 @@
-<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block content %}
+
+{% block title %}{{ giveaway.title }}{% endblock %}
+
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/giveaway_detailpage.css' %}">
 <div class="giveaway-container mb-4">
@@ -131,10 +135,9 @@
           <span>Du må være medlem for å delta.</span>
         </div>
         </div>
-      {% else %}
-        <div class="alert alert-info">Denne giveawayen er ikke aktiv for påmelding.</div>
       {% endif %}
       <p class="paragraph text-center mt-4">Når du deltar godkjenner du Railbird AS sine brukervilkår</p>
       <a class="btn secondary" href="#">Railbird konkurranseregler</a>
     </section>
 </div>
+{% endblock %}

@@ -7,7 +7,9 @@ logger = logging.getLogger(__name__)
 
 class User(AbstractUser):
     """
-    Utvidet bruker for Raildrops. Kun generelle brukerfelt.
+    Utvidet bruker for Raildrops.
+    Inneholder kun generelle brukerfelt, og kan utvides med flere felt etter behov.
+    Følger PEP8, bruker meaningful comments og robust validering.
     """
     profile_image = models.ImageField(
         upload_to='profile_pics/',
@@ -18,91 +20,49 @@ class User(AbstractUser):
     city = models.CharField(max_length=100, blank=True, help_text="Brukerens bostedsby/sted.")
 
     def __str__(self) -> str:
+        """
+        Returnerer e-post hvis tilgjengelig, ellers brukernavn.
+        """
         return self.email or self.username
 
-class CompanyManager(BaseUserManager):
-    """
-    Manager for Company-modellen.
-    """
-    def create_user(
-        self, email: str, company_name: str, organization_number: str, password: str = None, **extra_fields
-    ) -> 'Company':
+    def clean(self):
         """
-        Opprett og returner en ny bedriftsbruker.
+        Ekstra validering for User-modellen.
+        Sjekker at by ikke inneholder tall og at e-post har gyldig format.
+        Kan utvides med flere regler.
         """
-        if not email:
-            logger.error('Bedriftsbruker mangler e-postadresse')
-            raise ValueError('Bedriftsbruker må ha e-postadresse')
-        if not company_name:
-            logger.error('Bedriftsbruker mangler selskapsnavn')
-            raise ValueError('Bedriftsbruker må ha navn på selskap')
-        if not organization_number:
-            logger.error('Bedriftsbruker mangler organisasjonsnummer')
-            raise ValueError('Bedriftsbruker må ha organisasjonsnummer')
-        email = self.normalize_email(email)
-        company = self.model(
-            email=email,
-            company_name=company_name,
-            organization_number=organization_number,
-            **extra_fields
-        )
-        company.set_password(password)
-        company.save(using=self._db)
-        logger.info(f"Bedriftsbruker opprettet: {company}")
-        return company
+        from django.core.exceptions import ValidationError
+        import re
+        if self.city and any(char.isdigit() for char in self.city):
+            raise ValidationError("Byfeltet kan ikke inneholde tall.")
+        email_regex = r"[^@]+@[^@]+\.[^@]+"
+        if self.email and not re.match(email_regex, self.email):
+            raise ValidationError("Ugyldig e-postadresse.")
 
-    def create_superuser(
-        self, email: str, company_name: str, organization_number: str, password: str = None, **extra_fields
-    ) -> 'Company':
+    def email_user(self, subject, message, from_email=None, **kwargs):
         """
-        Opprett og returner en ny superuser-bedrift.
+        Sender e-post til brukeren. Robust mot feil.
         """
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser må ha is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser må ha is_superuser=True.')
-        return self.create_user(email, company_name, organization_number, password, **extra_fields)
+        from django.core.mail import send_mail, BadHeaderError
+        try:
+            send_mail(subject, message, from_email, [self.email], **kwargs)
+        except BadHeaderError:
+            # Logg feilen hvis ønskelig
+            pass
+        except Exception as e:
+            # Logg eller håndter andre e-postfeil
+            pass
 
-class Company(AbstractBaseUser, PermissionsMixin):
-    """
-    Modell for bedriftsbruker.
-    """
-    company_name = models.CharField(max_length=255, help_text="Navn på selskapet.")
-    organization_number = models.CharField(max_length=20, unique=True, help_text="Organisasjonsnummer.")
-    email = models.EmailField(unique=True, help_text="Bedriftens e-postadresse.")
-    first_name = models.CharField(max_length=100, help_text="Fornavn på kontaktperson.", blank=True, null=True, default="")
-    last_name = models.CharField(max_length=100, help_text="Etternavn på kontaktperson.", blank=True, null=True, default="")
-    address = models.CharField(max_length=255, help_text="Adresse til bedriften.", blank=True, null=True, default="")
-    postal_code = models.CharField(max_length=10, help_text="Postnummer.", blank=True, null=True, default="")
-    city = models.CharField(max_length=100, help_text="Poststed/by.", blank=True, null=True, default="")
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
-    is_superuser = models.BooleanField(default=False)
-    date_joined = models.DateTimeField(default=timezone.now)
-    groups = models.ManyToManyField(
-        'auth.Group',
-        related_name='company_set',
-        blank=True,
-        help_text='The groups this company belongs to.',
-        verbose_name='groups',
-    )
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        related_name='company_user_permissions',
-        blank=True,
-        help_text='Specific permissions for this company.',
-        verbose_name='user permissions',
-    )
+from django.conf import settings
+from django.db import models
 
-    objects = CompanyManager()
+class MemberProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="member_profile")
+    city = models.CharField(max_length=100, blank=True, null=True)
+    profile_image = models.ImageField(upload_to="profile_images/", blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['company_name', 'organization_number', 'first_name', 'last_name', 'address', 'postal_code', 'city']
+    def __str__(self):
+        return f"{self.user.email} - {self.city or ''}"
 
-    def __str__(self) -> str:
-        """
-        Returnerer selskapsnavn og e-post.
-        """
-        return f"{self.company_name} ({self.email})"
+# BusinessProfile-modellen er fjernet. Ny bedriftslogikk bruker Business-modellen i businesses/models.py.

@@ -1,5 +1,5 @@
 from .permissions import can_enter_giveaway
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic.edit import CreateView
@@ -109,7 +109,18 @@ class GiveawayDetailView(DetailView):
             return self.render_to_response(context)
 
 
-class GiveawayCreateView(LoginRequiredMixin, CreateView):
+class BusinessOnlyMixin(UserPassesTestMixin):
+    """Mixin som kun tillater bedriftsbrukere tilgang."""
+    def test_func(self):
+        user = self.request.user
+        return user.is_authenticated and hasattr(user, "business_account")
+
+    def handle_no_permission(self):
+        from django.contrib import messages
+        messages.error(self.request, "Kun bedrifter kan opprette giveaways.")
+        return redirect("accounts:profile")
+
+class GiveawayCreateView(LoginRequiredMixin, BusinessOnlyMixin, CreateView):
     """
     View for å opprette en giveaway for innlogget bedriftsbruker.
     Viser bedriftsnavn og logo i context, og validerer at bruker har business.
@@ -118,19 +129,13 @@ class GiveawayCreateView(LoginRequiredMixin, CreateView):
     form_class = GiveawayCreateForm
     template_name = "giveaways/giveaway_form.html"
 
-    def dispatch(self, request, *args, **kwargs):
-        if not hasattr(request.user, "business_profile"):
-            logger.warning(f"User {request.user} forsøkte å opprette giveaway uten business.")
-            return redirect("profile")
-        return super().dispatch(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["business"] = self.request.user.business_profile
+        context["business"] = self.request.user.business_account
         return context
 
     def form_valid(self, form):
-        form.instance.business = self.request.user.business_profile
+        form.instance.business = self.request.user.business_account
         logger.info(f"Giveaway opprettet for business {form.instance.business.name}")
         return super().form_valid(form)
 

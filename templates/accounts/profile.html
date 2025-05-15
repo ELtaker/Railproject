@@ -32,8 +32,10 @@
                         </dd>
                     </dl>
                     <div class="text-center mt-4 d-flex flex-column flex-md-row justify-content-center gap-2">
-                        <a href="{% url 'profile_edit' %}" class="btn btn-primary">Rediger profil</a>
-                        <a href="/logout/" class="btn btn-outline-secondary">Logg ut</a>
+                        {% if is_member %}
+                        <a href="{% url 'accounts:profile-edit' %}" class="btn btn-primary">Rediger profil</a>
+                        {% endif %}
+                        <a href="{% url 'accounts:logout' %}" class="btn btn-outline-secondary">Logg ut</a>
                     </div>
                 </div>
             </div>

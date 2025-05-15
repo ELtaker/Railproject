@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container mt-5">
     <h2>Registrer deg som medlem</h2>
-    <p>Allerede medlem? <a href="{% url 'accounts:member_login' %}">Logg inn</a></p>
+    <p>Allerede medlem? <a href="{% url 'accounts:member-login' %}">Logg inn</a></p>
     <form method="post" novalidate>
         {% csrf_token %}
         {{ form.non_field_errors }}

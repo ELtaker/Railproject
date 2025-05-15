@@ -1,41 +1,84 @@
-# WINDSURF RULES FOR DJANGO WEB APP
+# WINDSURF RULES FOR DJANGO WEB APP - RAILDROPS CORE (V3)
 
-[Python]
-lint = flake8
-max-line-length = 120
-require-type-hints = true
-no-wildcard-imports = true
-no-print-statements = true
-require-logging = true
-require-docstrings = true
-
-[Django]
-modular-app-structure = true
-no-business-logic-in-config = true        # Ingen forretningslogikk i config/, kun settings og URL-routing
-use-dotenv = true
-require-str-method = true
-prefer-class-based-views = true
-template-dir = templates/
-static-dir = static/
-require-modelforms = true                 # Alle create/update-former skal bruke ModelForm
-require-form-clean-methods = true         # Validering skal skje i clean() og clean_<field>()
-require-permissions-modules = true
-require-services-modules = true
-require-tests-for-apps = true
-require-app-permissions-module = true     # Hver app skal ha permissions.py hvis relevant
-require-app-services-module = true        # Hver app skal ha services.py hvis relevant
-require-app-tests-directory = true        # Hver app skal ha tests/-mappe
+[Raildrops-Core]
+# Regler for Raildrops kjernefunksjonalitet og Django
+require-app-accounts = true
+require-app-giveaways = true
+require-app-businesses = true
+require-app-notifications = true
+use-django-groups-members = true
+use-business-profile-model = true
+check-member-role-implementation = true
+check-business-user-implementation = true
+require-giveaway-model = true
+require-giveaway-location-field = true
+require-giveaway-question-field = true
+require-giveaway-answer-options = true
+require-giveaway-correct-answer = true
+use-participation-model = true
+handle-member-answer-submission = true
+track-participation-time = true
+ensure-unique-participation = true
+link-participation-to-member = true
+link-participation-to-giveaway = true
+store-selected-answer = true
+base-winner-selection-on-correct-answer = true
+implement-random-winner-from-correct = true
+handle-winner-announcement = true
+test-accounts-app = true
+test-giveaways-app = true
+test-business-features = true
+test-notification-system = true
+enforce-role-based-permissions = true
+handle-business-location-registration = true
+handle-member-location-permission = true
+implement-location-based-filtering = true
+enforce-pep8-compliance = true
+no-raw-sql = true
+prefer-cbvs-for-complex = true
+prefer-fbvs-for-simple = true
+use-django-orm = true
+use-django-auth = true
+use-django-forms = true
+follow-mvt-pattern = true
+apply-middleware-appropriately = true
+orm-model-naming-convention = lowercase_with_underscores
+orm-field-naming-convention = lowercase_with_underscores
+require-model-str-representation = true
+view-naming-convention = CamelCaseForCBV / lowercase_with_underscores_for_FBV
+template-naming-convention = lowercase_with_underscores.html
+url-pattern-naming-convention = lowercase-with-hyphens
+keep-business-logic-in-models-forms = true
+keep-views-light = true
+define-restful-urls = true
+enforce-csrf-protection = true
+prevent-sql-injection = true
+mitigate-xss = true
+use-django-testing-tools = true
+leverage-django-caching = true
+manage-static-files-properly = true
+optimize-orm-queries = true
+implement-database-indexing = true
+consider-async-views = true
+use-celery-for-long-tasks = true
+use-try-except-blocks = true
+use-django-validation = true
+customize-error-pages = true
+use-django-signals-for-decoupling = true
+specify-core-dependencies = true
+prefer-production-database = PostgreSQL|MySQL
+follow-docker-instructions = true
 
 [HTML]
 require-html5-doctype = true
 require-semantic-html = true
 require-bootstrap-version = 5
-require-accessibility = true              # All HTML skal være universelt utformet (a11y)
+require-accessibility = true
 
 [CSS]
 require-css3 = true
 custom-css-dir = static/css/
-no-inline-css = true                      # Ingen inline CSS
+no-inline-css = true
 require-stylelint = true
 
 [Bootstrap]
@@ -43,18 +86,6 @@ require-bootstrap-version = 5
 no-unnecessary-bootstrap-overrides = true
 prefer-bootstrap-components = true
 require-responsive-design = true
-
-[Docker]
-require-official-python-image = true
-no-secrets-in-dockerfile = true
-require-dockerignore = true
-require-hadolint = true
-
-[Env]
-no-env-in-git = true
-require-env-example = true
-no-secrets-in-code = true
-require-validate-env = true
 
 [General]
 require-meaningful-comments = true
@@ -66,10 +97,10 @@ require-readme = true
 require-onboarding-doc = true
 require-ci-cd-pipeline = true
 require-gitignore = true
-require-utils-directory = true            # Fellesfunksjoner (f.eks. logging) skal ligge i utils/
-require-updated-readme = true             # README skal alltid være oppdatert og forklare prosjektstruktur og regler
-require-updated-onboarding-doc = true     # Onboarding-dokument skal alltid være oppdatert
+require-utils-directory = true
+require-updated-readme = true
+require-updated-onboarding-doc = true
 
 [Structure]
 require-modular-code = true
-require-app-tests-directory = true        # Hver app skal ha egen tests/-mappe med relevante tester
+require-app-tests-directory = true

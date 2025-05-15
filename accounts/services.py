@@ -1,1 +1,13 @@
-import logging\nfrom .models import Company\n\nlogger = logging.getLogger(__name__)\n\ndef register_company(email: str, company_name: str, org_number: str, password: str) -> Company:\n    \"\"\"Registrer en ny bedrift.\"\"\"\n    company = Company.objects.create_user(\n        email=email,\n        company_name=company_name,\n        organization_number=org_number,\n        password=password\n    )\n    logger.info(f\"Ny bedrift registrert: {company}\")\n    return company\n
+"""
+Eksempel på service-funksjon for ekstern forretningslogikk.
+Her kan du plassere logikk som ikke hører hjemme i modeller eller views.
+"""
+
+def send_welcome_email(user):
+    """
+    Sender velkomstmail til ny bruker.
+    """
+    from django.core.mail import send_mail
+    subject = "Velkommen til Raildrops!"
+    message = "Hei, og velkommen!"
+    send_mail(subject, message, "noreply@raildrops.no", [user.email])

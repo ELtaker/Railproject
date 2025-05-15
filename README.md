@@ -1,119 +1,175 @@
-# Raildrops
+# Raildrops - Django Web Application
 
-## Prosjektstruktur
-- accounts/         # Brukere og autentisering
-- businesses/       # Bedriftsprofiler
-- giveaways/        # Giveaways og påmeldinger
-- notifications/    # Varslinger
-- templates/        # HTML-maler
-- static/           # CSS, JS, bilder
-- utils/            # Fellesfunksjoner (logging, etc.)
+Raildrops is a modular Django web application for managing location-based giveaways, supporting both individual members and business users. The project emphasizes clear separation of concerns, robust role-based permissions, and a modern, responsive user experience.
 
-## Regler og konvensjoner
-- Se `.windsurfrules` for alle koderegler og strukturkrav.
-- All forretningslogikk skal ligge i `services.py`.
-- Alle forms skal bruke ModelForm og validering i clean().
-- Alle sensitive verdier skal ligge i `.env`.
+## Features
 
-### Brukerroller og medlemskap
-- Raildrops bruker **Django Groups** for å håndtere roller og medlemskap.
-- Vanlige brukere legges automatisk i gruppen `Members` ved registrering.
-- Bedriftsbrukere får en tilknyttet `business_profile` og er ikke i `Members`-gruppen.
-- For å sjekke medlemskap, bruk alltid:
-  ```python
-  user.groups.filter(name="Members").exists() and not hasattr(user, "business_profile")
-  ```
-- For bedriftsbruker:
-  ```python
-  hasattr(user, "business_profile")
-  ```
-- Utvid roller ved å legge til nye grupper i Django admin og bruke gruppesjekk i permissions.py.
-- All rollelogikk skal sentraliseres i `accounts/permissions.py` og/eller `giveaways/permissions.py`.
+- **User Accounts:** Registration and authentication for both members and businesses.
+- **Business Dashboard:** Businesses can create, manage, and view their giveaways.
+- **Giveaways:** Location-based giveaways with participation logic, question/answer validation, and winner selection.
+- **Notifications:** Centralized notification system for user and business activities.
+- **Role-based Permissions:** Strict separation between member and business functionality.
+- **Location Handling:** Businesses register their location; members can filter/join giveaways by location.
+- **Testing:** Comprehensive unit and integration tests for all major apps.
 
-## Utviklingsprosess og status
+## Application Structure
 
-Dette prosjektet gir en komplett, offentlig giveaways-funksjon for Raildrops-plattformen. Prosessen har fulgt moderne Django-praksis, med fokus på modulær kode, universell utforming og god dokumentasjon.
+```
+raildrops/
+├── config/                # Django project configuration (settings, urls, wsgi, asgi)
+├── accounts/              # User management (members and businesses), authentication, profiles
+├── businesses/            # Business profile management, dashboard, business-specific tools
+├── giveaways/             # Giveaway models, participation, winner logic
+├── notifications/         # Notification system for users and businesses
+├── templates/             # HTML templates, organized by app
+├── static/                # Static files (CSS, JS, images)
+├── tests/                 # Test directories for each app
+├── utils/                 # Utility modules and helpers
+├── requirements.txt       # Python dependencies
+├── README.md              # Project documentation
+└── ...
+```
 
-### 1. Oppstart og struktur
-- Prosjektet satt opp som et Django-prosjekt med separate apper for `giveaways`, `businesses`, `accounts` m.m.
-- Kodebase strukturert etter Windsurf-reglene for modulær Django-utvikling.
-- Bruk av pre-commit hooks, .env-filer og requirements.txt for miljøkontroll.
+## User Roles & Models
 
-### 2. Modellering og database
-- Modell for Giveaway med felter for premie, verdi, start/sluttdato, spørsmål, svaralternativer, kobling til bedrift og aktiv-status.
-- Modell for Entry (påmelding) og kobling til bruker.
-- Relasjoner mellom giveaways og bedrifter.
+- **Members:** Regular users who can join giveaways. Managed via Django Groups.
+- **Businesses:** Users with a linked BusinessProfile. Can create and manage giveaways.
+- **BusinessProfile:** Stores business info, location, and links to User.
+- **Giveaway:** Represents a giveaway event, including title, description, location, question, answer options, and correct answer.
+- **Participation:** Tracks member entries, selected answers, and timestamps. Ensures unique participation per giveaway.
 
-### 3. Offentlig oversikt og filtrering
-- Implementert horisontal scroll med giveaways-kort, filtrerbare på lokasjon (by, postnummer).
-- Kortene viser bedriftsnavn, logo, premie, verdi, sted og antall deltakere.
-- Bruk av Bootstrap 5 og moderne CSS3 for responsiv og universelt utformet visning.
+## Giveaway Participation & Winner Selection
 
-### 4. Detaljvisning og påmelding
-- Detaljside for hver giveaway med all info og påmeldingsskjema.
-- Skjemaet viser spørsmål og svaralternativer (radio), og håndterer status for påmelding.
-- Dynamisk visning av påmeldingsmulighet basert på om bruker er innlogget/allerede påmeldt.
+- Members can join active giveaways by answering a question.
+- Only one entry per member per giveaway is allowed.
+- Winner selection prioritizes correct answers and selects randomly among correct entries.
+- Winner announcement and notification are handled via the notifications system.
+
+## Permissions & Access Control
+
+- Role-based permissions enforced via Django Groups and custom mixins.
+- Only business users can access business dashboard and create giveaways.
+- Members can view and join giveaways, but not create them.
+
+## Location Features
+
+- Businesses register their location during signup/profile management.
+- Members may be prompted for location to filter available giveaways.
+- Giveaways can be filtered and displayed based on user or business location.
+
+## Setup & Installation
+
+1. **Clone the repository:**
+   ```sh
+   git clone <your-repo-url>
+   cd raildrops
+   ```
+2. **Create and activate a virtual environment:**
+   ```sh
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+3. **Install dependencies:**
+   ```sh
+   pip install -r requirements.txt
+   ```
+4. **Apply migrations:**
+   ```sh
+   python manage.py migrate
+   ```
+5. **Create a superuser (admin):**
+   ```sh
+   python manage.py createsuperuser
+   ```
+6. **Run the development server:**
+   ```sh
+   python manage.py runserver
+   ```
+
+## Running Tests
+
+To run all tests:
+```sh
+python manage.py test
+```
+Each app has its own `tests/` directory with unit and integration tests.
+
+## Contributing
+- Follow PEP8 and Django best practices.
+- Write meaningful comments and docstrings.
+- Add/maintain tests for all features.
+- Keep code modular and well-documented.
+
+## License
+This project is licensed under the MIT License.
 
 ---
 
-## Formation & History
-
-Raildrops-prosjektet ble startet våren 2025 med mål om å lage en moderne, universelt utformet plattform for giveaways og konkurranser mellom bedrifter og medlemmer. Prosjektet bygger på følgende utviklingsfaser og milepæler:
-
-- **Oppstart og planlegging:**
-  - Prosjektet ble initiert med fokus på sikkerhet, universell utforming, og et solid teknisk grunnlag.
-  - Valg av Django som backend-rammeverk og Bootstrap 5 for frontend.
-  - Strenge arkitekturregler (se Windsurf-regler) ble etablert for å sikre modulær, testbar kode og god dokumentasjon.
-
-- **Første utviklingsfase:**
-  - Oppsett av prosjektstruktur, apps for `accounts` (brukere/bedrifter) og `businesses`.
-  - Implementering av Company (custom user model) og Business-modell med admin-felt.
-  - Registreringsflyt for både medlemmer og bedrifter, med automatisk kobling av admin til bedrift.
-  - Opprettelse av dashboard for bedriftsbrukere med relevante handlinger.
-
-- **Videreutvikling:**
-  - Implementering av giveaways, påmeldingssystem og dynamisk visning for ulike brukertyper.
-  - Robust validering i forms (ModelForm og clean-metoder).
-  - Kontinuerlig forbedring av brukeropplevelse og tilgjengelighet (a11y).
-  - Løpende bugfixes, spesielt rundt kobling mellom Company og Business/admin-felt.
-  - Tilbakemeldinger fra brukere og testere har ført til flere iterasjoner på påmeldingsflyt og dashboard.
-
-- **Teknisk og organisatorisk:**
-  - Alle endringer dokumenteres fortløpende i README og onboarding.md.
-  - Prosjektet følger CI/CD-prinsipper, pre-commit hooks og har full testdekning for alle apps.
-  - Miljøvariabler håndteres sikkert, og det finnes alltid en oppdatert `.env.example`.
-
----
-
-### 5. Testing og frontend
-- Frontend testet lokalt med Django runserver.
-- Testside (`testpage.html`) viser alle giveaways horisontalt.
-
-### 6. Neste steg
-- Fullføre backend for påmelding (lagre Entry ved innsending).
-- Flere tester og tilbakemeldinger fra brukere.
-
-## Kom i gang
-1. Klon repoet og lag `.env`-fil etter `.env.example`.
-2. Opprett og aktiver virtuelt miljø:  
-   `python -m venv .venv && source .venv/bin/activate` (Linux/Mac)  
-   `.venv\Scripts\activate` (Windows)
-3. Installer avhengigheter:  
-   `pip install -r requirements.txt`
-4. Kjør migrasjoner:  
-   `python manage.py migrate`
-5. Start server:  
-   `python manage.py runserver`
-6. Åpne i browser:  
-   `http://127.0.0.1:8000`
-
-## Arkitektur og prinsipper
-- Django 5.2, Bootstrap 5, CSS3
-- Streng modulær struktur (se Windsurf-regler)
-- Universell utforming og tilgjengelighet (a11y)
-- Alle forms via ModelForm og validering i clean-metoder
-- Logging og docstrings på alle views
-
-## Kontakt og bidrag
-- Se onboarding.md for detaljer om prosjektregler og onboarding.
-- Bidrag ønskes! Følg prosjektets kodestandard og send gjerne pull requests.
+For more details, see the code and inline documentation. For onboarding and developer notes, see `ONBOARDING.md`.
+    # Skjemaer relatert til brukerregistrering, innlogging og profilhåndtering
+│   ├── managers.py                 # Egendefinerte modell-managere for accounts-modellene
+│   ├── migrations/                 # Inneholder database-migrasjoner for 'accounts'-appen
+│   │   └── ...                     # (f.eks., __init__.py og migrasjonsfiler)
+│   ├── models.py                   # Definisjoner for datamodellene knyttet til brukere og bedriftsprofiler
+│   ├── permissions.py              # Definerer tilgangskontroller og rettigheter for 'accounts'-appen
+│   ├── templates/                 # Inneholder HTML-maler spesifikke for 'accounts'-funksjonalitet
+│   │   └── accounts/             # (f.eks., registreringsskjemaer, profilsider)
+│   ├── tests/                      # Eksplisitt testmappe for 'accounts'-appen
+│   │   ├── __init__.py             # Gjør 'tests'-mappen til en Python-pakke
+│   │   ├── test_models.py          # Tester for 'accounts'-appens modeller
+│   │   ├── test_views.py           # Tester for 'accounts'-appens views
+│   │   └── ...                     # (andre testfiler)
+│   └── views.py                    # Håndterer logikken for visninger relatert til brukerkonti
+├── businesses/                       # Håndterer funksjonalitet spesifikk for bedrifter
+│   ├── __init__.py                 # Gjør 'businesses'-mappen til en Python-pakke
+│   ├── admin.py                    # Definisjoner for Django Admin-grensesnittet for businesses-modeller
+│   ├── forms.py                    # Skjemaer relatert til bedriftsspesifikk funksjonalitet
+│   ├── migrations/                 # Inneholder database-migrasjoner for 'businesses'-appen
+│   │   └── ...                     # (f.eks., __init__.py og migrasjonsfiler)
+│   ├── models.py                   # Definisjoner for datamodellene knyttet til bedrifter (utover BusinessProfile)
+│   ├── permissions.py              # Definerer tilgangskontroller og rettigheter for 'businesses'-appen
+│   ├── templates/                 # Inneholder HTML-maler spesifikke for 'businesses'-funksjonalitet
+│   │   └── businesses/           # (f.eks., dashbord for bedrifter)
+│   ├── tests/                      # Eksplisitt testmappe for 'businesses'-appen
+│   │   ├── __init__.py             # Gjør 'tests'-mappen til en Python-pakke
+│   │   ├── test_models.py          # Tester for 'businesses'-appens modeller
+│   │   ├── test_views.py           # Tester for 'businesses'-appens views
+│   │   └── ...                     # (andre testfiler)
+│   └── views.py                    # Håndterer logikken for visninger relatert til bedrifter
+├── giveaways/                        # Håndterer funksjonalitet knyttet til giveaways
+│   ├── __init__.py                 # Gjør 'giveaways'-mappen til en Python-pakke
+│   ├── admin.py                    # Definisjoner for Django Admin-grensesnittet for giveaways-modeller
+│   ├── forms.py                    # Skjemaer relatert til opprettelse og deltakelse i giveaways
+│   ├── migrations/                 # Inneholder database-migrasjoner for 'giveaways'-appen
+│   │   └── ...                     # (f.eks., __init__.py og migrasjonsfiler)
+│   ├── models.py                   # Definisjoner for datamodellene knyttet til giveaways (Event, Participation)
+│   ├── permissions.py              # Definerer tilgangskontroller og rettigheter for 'giveaways'-appen
+│   ├── templates/                 # Inneholder HTML-maler spesifikke for giveaways-funksjonalitet
+│   │   └── giveaways/            # (f.eks., visning av giveaways, deltakelsesskjema)
+│   ├── notifications.py           # Håndterer spesifikke meldinger relatert til giveaways
+│   ├── tasks.py                    # Inneholder bakgrunnsoppgaver (f.eks., vinnertrekning) for giveaways
+│   ├── tests/                      # Eksplisitt testmappe for 'giveaways'-appen
+│   │   ├── __init__.py             # Gjør 'tests'-mappen til en Python-pakke
+│   │   ├── test_models.py          # Tester for 'giveaways'-appens modeller
+│   │   ├── test_views.py           # Tester for 'giveaways'-appens views
+│   │   └── ...                     # (andre testfiler)
+│   └── views.py                    # Håndterer logikken for visninger relatert til giveaways
+├── notifications/                   # Generelt system for håndtering av уведомления
+│   ├── __init__.py                 # Gjør 'notifications'-mappen til en Python-pakke
+│   ├── emails.py                   # Spesifikk håndtering av e-postvarsler
+│   ├── tests/                      # Eksplisitt testmappe for 'notifications'-appen
+│   │   ├── __init__.py             # Gjør 'tests'-mappen til en Python-pakke
+│   │   ├── test_models.py          # Tester for 'notifications'-appens modeller (hvis relevant)
+│   │   ├── test_views.py           # Tester for 'notifications'-appens views (hvis relevant)
+│   │   └── ...                     # (andre testfiler)
+│   └── ...                         # (andre filer for varslingsmekanismer)
+├── static/                         # Inneholder statiske filer (CSS, JavaScript, bilder)
+│   └── ...                         # (organisert i undermapper)
+├── templates/                      # Inneholder globale HTML-maler som brukes på tvers av appene
+│   └── ...                         # (f.eks., base.html)
+├── utils/                            # Inneholder gjenbrukbare hjelpefunksjoner og moduler
+│   ├── __init__.py                 # Gjør 'utils'-mappen til en Python-pakke
+│   ├── helpers.py                  # Diverse hjelpefunksjoner
+│   └── logging.py                  # Konfigurasjon for logging
+├── manage.py                       # Django-kommandolinjeverktøy for administrative oppgaver
+└── requirements.txt                # Liste over Python-pakker som prosjektet er avhengig av
