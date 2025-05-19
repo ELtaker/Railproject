@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 class EntryForm(forms.ModelForm):
     answer = forms.CharField(label="Svar", widget=forms.RadioSelect, required=True)
-    user_location_city = forms.CharField(widget=forms.HiddenInput, required=True)
+    user_location_city = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Din by'}), required=True)
 
     class Meta:
         model = Entry

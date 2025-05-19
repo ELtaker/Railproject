@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Bedriftsdashboard | Raildrops{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="mb-1">Bedriftsdashboard</h2>
+            <p class="text-muted mb-0">{{ business.name }} ({{ business.city }})</p>
+            {% if business.logo %}
+                <img src="{{ business.logo.url }}" alt="Logo {{ business.name }}" class="rounded mt-2" style="max-height: 80px; object-fit: cover;">
+            {% endif %}
+            <div class="mt-3">
+                <a href="{% url 'accounts:business-profile-edit' %}" class="btn btn-outline-primary" aria-label="Rediger bedriftsprofil">
+                    <i class="fa fa-user-edit" aria-hidden="true"></i> Rediger bedriftsprofil
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- At-a-glance stats -->
+    <div class="row mb-4 justify-content-center">
+        <div class="col-md-4 col-lg-3 mb-2">
+            <div class="card text-center shadow-sm h-100">
+                <div class="card-body">
+                    <div class="display-5 fw-bold text-primary">{{ total_giveaways }}</div>
+                    <div class="text-muted">Totalt antall giveaways</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3 mb-2">
+            <div class="card text-center shadow-sm h-100">
+                <div class="card-body">
+                    <div class="display-5 fw-bold text-success">{{ total_participants }}</div>
+                    <div class="text-muted">Totalt antall deltakere</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3 mb-2">
+            <div class="card text-center shadow-sm h-100">
+                <div class="card-body">
+                    <div class="display-5 fw-bold text-warning">{{ total_winners }}</div>
+                    <div class="text-muted">Totalt antall vinnere</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col text-center">
+            <a href="{% url 'giveaways:giveaway-create' %}" class="btn btn-success btn-lg">
+                <i class="fa fa-plus"></i> Opprett ny giveaway
+            </a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <h4>Aktive giveaways</h4>
+    </div>
+    <!-- Recent Activity -->
+    <div class="row mt-5">
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">Siste giveaways</div>
+                <ul class="list-group list-group-flush">
+                    {% if recent_giveaways %}
+                        {% for giveaway in recent_giveaways %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <strong>{{ giveaway.title }}</strong><br>
+                                <small class="text-muted">Opprettet: {{ giveaway.created_at|date:"d.m.Y H:i" }}</small>
+                            </span>
+                            <a href="{% url 'giveaways:giveaway-detail' giveaway.pk %}" class="btn btn-outline-secondary btn-sm">Detaljer</a>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="list-group-item text-muted">Ingen nylige giveaways.</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">Siste vinnere</div>
+                <ul class="list-group list-group-flush">
+                    {% if recent_winners %}
+                        {% for winner in recent_winners %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <strong>{{ winner.user.get_full_name|default:winner.user.email }}</strong> vant <strong>{{ winner.giveaway.title }}</strong><br>
+                                <small class="text-muted">{{ winner.selected_at|date:"d.m.Y H:i" }}</small>
+                            </span>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="list-group-item text-muted">Ingen nylige vinnere.</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <h4>Aktive giveaways</h4>
+            {% if giveaways_active %}
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Premie</th>
+                                <th>Verdi</th>
+                                <th>Start</th>
+                                <th>Slutt</th>
+                                <th>Status</th>
+                                <th>Administrer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for giveaway in giveaways_active %}
+                            <tr>
+                                <td>{{ giveaway.title }}</td>
+                                <td>{{ giveaway.prize_value|default:"-" }}</td>
+                                <td>{{ giveaway.start_date|date:"d.m.Y H:i" }}</td>
+                                <td>{{ giveaway.end_date|date:"d.m.Y H:i" }}</td>
+                                <td>
+                                    {% if giveaway.is_active %}
+                                        <span class="badge bg-success">Aktiv</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Avsluttet</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'giveaways:giveaway-detail' giveaway.pk %}" class="btn btn-outline-primary btn-sm">Detaljer</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">Ingen aktive giveaways.</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4>Avsluttede giveaways</h4>
+            {% if giveaways_ended %}
+                <ul class="list-group">
+                    {% for giveaway in giveaways_ended %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                {{ giveaway.title }} (Slutt: {{ giveaway.end_date|date:"d.m.Y H:i" }})
+                            </span>
+                            <a href="{% url 'giveaways:giveaway-detail' giveaway.pk %}" class="btn btn-outline-secondary btn-sm">Detaljer</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">Ingen avsluttede giveaways.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

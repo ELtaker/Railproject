@@ -1,0 +1,73 @@
+{% load static %}
+
+<nav class="navbar navbar-expand-lg sticky-top bakgrunn-header" aria-label="Hovednavigasjon">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'home' %}" aria-label="Raildrops hjemmeside">
+            <img src="{% static 'img/features-icon-1.png' %}" alt="Raildrops Logo" width="30" height="30">
+        </a>
+       
+        <button class="custom-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-expanded="false" aria-label="Vis mobilmeny">
+            <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+        </button>
+        <div class="collapse navbar-collapse d-none d-lg-flex" id="mainNavigation">
+            <ul class="navbar-nav ms-auto" role="menubar" aria-label="Hovedmeny">
+                <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">Lokasjon</a></li>
+                <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">Features</a></li>
+                <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">Om oss</a></li>
+                {% if user.is_authenticated and is_member %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:dashboard' %}">Min side</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:member-profile' %}">Profil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logg ut</a></li>
+                {% else %}
+                    {% if user.is_authenticated and is_business %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:business-dashboard' %}">Bedriftsdashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:business-profile' %}">Rediger bedriftsprofil</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'giveaways:giveaway-create' %}">Opprett giveaway</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logg ut</a></li>
+                    {% else %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarCompanyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Bedrift</a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarCompanyDropdown">
+                                <li><a class="dropdown-item" href="{% url 'businesses:business-register' %}">Registrer bedrift</a></li>
+                                <li><a class="dropdown-item" href="{% url 'businesses:business-login' %}">Logg inn for bedrift</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member-register' %}">Bli Medlem</a></li>
+                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member-login' %}">Logg inn</a></li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+        </div>
+        <!-- Mobile Offcanvas -->
+        <div class="offcanvas offcanvas-end bakgrunn-header d-lg-none" tabindex="-1" id="mobileMenu">
+            <div class="offcanvas-header">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Lukk"></button>
+                <div class="offcanvas-center">
+                    <img src="{% static 'img/img.png' %}" width="75" height="75" alt="Brukerikon">
+                </div>
+            </div>
+            <div class="offcanvas-body text-center">
+                <a class="btn btn-outline-main w-100 mb-2" href="#">Lokasjon</a>
+                <a class="btn btn-outline-main w-100 mb-2" href="#">Features</a>
+                <a class="btn btn-outline-main w-100 mb-2" href="#">Om oss</a>
+                {% if user.is_authenticated and is_member %}
+                    <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:dashboard' %}">Min side</a>
+                    <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:member-profile' %}">Profil</a>
+                    <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:logout' %}">Logg ut</a>
+                {% else %}
+                    {% if user.is_authenticated and is_business %}
+                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:business-dashboard' %}">Bedriftsdashboard</a>
+                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:business-profile' %}">Rediger bedriftsprofil</a>
+                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'giveaways:giveaway-create' %}">Opprett giveaway</a>
+                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:logout' %}">Logg ut</a>
+                    {% else %}
+                        <a class="btn btn-outline-main w-100 mb-2" href="#">Bedrift</a>
+                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'businesses:business-register' %}">Bedrift</a>
+                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'accounts:member-register' %}">Bli Medlem</a>
+                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'accounts:member-login' %}">Logg inn</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>

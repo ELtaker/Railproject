@@ -15,88 +15,15 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">  
 </head>
-<header>
-      <nav class="navbar navbar-expand-lg sticky-top bakgrunn-header">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">
-                <img src="{% static 'img/Logo ny.png' %}" alt="Logo">
-            </a>
-
-            <button class="custom-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu">
-                <span></span><span></span><span></span>
-            </button>
-
-            <div class="collapse navbar-collapse d-none d-lg-flex">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="#">Lokasjon</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Features</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Om oss</a></li>
-                    
-                    {% if user.is_authenticated and is_member %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:dashboard' %}">Min side</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">Profil</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logg ut</a></li>
-                    {% elif user.is_authenticated and is_business %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:business_dashboard' %}">Bedriftsdashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'giveaways:giveaway_create' %}">Opprett giveaway</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logg ut</a></li>
-                    {% else %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarCompanyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Bedrift</a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarCompanyDropdown">
-                                <li><a class="dropdown-item" href="{% url 'accounts:business-register' %}">Registrer bedrift</a></li>
-                                <li><a class="dropdown-item" href="{% url 'accounts:business-login' %}">Logg inn for bedrift</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member-register' %}">Bli Medlem</a></li>
-                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member-login' %}">Logg inn</a></li>
-                    {% endif %}
-                </ul>
-            </div>
-
-            <!-- Mobil Offcanvas -->
-            <div class="offcanvas offcanvas-end bakgrunn-header d-lg-none" tabindex="-1" id="mobileMenu">
-                <div class="offcanvas-header">
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Lukk"></button>
-                    <div class="offcanvas-center">
-                        <img src="{% static 'img/img.png' %}" width="75" height="75" alt="Brukerikon">
-                    </div>
-                </div>
-                <div class="offcanvas-body text-center">
-                    {% if user.is_authenticated and is_member %}
-                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:dashboard' %}">Min side</a>
-                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:profile' %}">Profil</a>
-                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:logout' %}">Logg ut</a>
-                    {% elif user.is_authenticated and is_business %}
-                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:business_dashboard' %}">Bedriftsdashboard</a>
-                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'giveaways:giveaway_create' %}">Opprett giveaway</a>
-                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:logout' %}">Logg ut</a>
-                    {% else %}
-                        <a class="btn btn-outline-main w-100 mb-2" href="#">Lokasjon</a>
-                        <a class="btn btn-outline-main w-100 mb-2" href="#">Features</a>
-                        <a class="btn btn-outline-main w-100 mb-2" href="#">Om oss</a>
-                        <a class="btn btn-outline-main w-100 mb-2" href="#">Bedrift</a>
-                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'accounts:business-register' %}">Bedrift</a>
-                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'accounts:member-register' %}">Bli Medlem</a>
-                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'accounts:member-login' %}">Logg inn</a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </nav>
-</header>
 <body>
-    <main id="main-content" class="flex-shrink-0" tabindex="-1">
-        {% if messages %}
-            <div class="container">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
-        {% block content %}{% endblock %}
-    </main>
-    <!-- Footer starts -->
+<header>
+    {% include "includes/navbar.html" %}
+</header>
+<main id="main-content" class="flex-shrink-0" tabindex="-1">
+    {% include "includes/messages.html" %}
+    {% block content %}{% endblock %}
+</main>
+<!-- Footer starts -->
 <footer class="footer-wrapper bg-dark text-light py-5">
     <div class="container">
       <div class="text-center mb-4">
@@ -105,7 +32,6 @@
           For å delta i premie-trekninger må du være over 18 år.
         </p>
       </div>
-  
       <div class="row text-center text-md-start g-4 mb-4">
         <div class="col-12 col-md-4">
           <h5 class="mb-3">Raildrops</h5>
@@ -132,7 +58,6 @@
           </ul>
         </div>
       </div>
-  
       <div class="text-center">
         <p>Følg oss på sosiale medier</p>
         <div class="social-icons d-flex justify-content-center gap-3 mt-2 mb-4">
@@ -142,15 +67,15 @@
         </div>
       </div>
     </div>
-  
     <div class="footer-bottom text-center mt-4 pt-3 border-top border-secondary">
       <small>&copy; 2025 Raildrops – Alle rettigheter reservert.</small>
     </div>
-  </footer>
-  <!-- Footer ends -->
-  
-    
-  <!-- Bootstrap 5 JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+</footer>
+<!-- Footer ends -->
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+<!-- Accessibility Enhancements -->
+{% include "includes/accessibility_enhancements.html" %}
 </body>
 </html>

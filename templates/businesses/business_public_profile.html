@@ -43,7 +43,7 @@
                                             <h5 class="card-title">{{ giveaway.title }}</h5>
                                             <p class="card-text small">{{ giveaway.description|truncatewords:20 }}</p>
                                             <div class="text-muted small mb-2">Trekningsdato: {{ giveaway.end_date|date:"d.m.Y H:i" }}</div>
-                                            <a href="{% url 'giveaway_detail' giveaway.pk %}" class="btn btn-primary btn-sm">Se giveaway</a>
+                                            <a href="{% url 'giveaways:giveaway-detail' giveaway.pk %}" class="btn btn-primary btn-sm">Se giveaway</a>
                                         </div>
                                     </div>
                                 </div>

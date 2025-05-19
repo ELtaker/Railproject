@@ -1,34 +1,28 @@
 import logging
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login, logout, get_user_model
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
-from django.views.generic.edit import FormView, UpdateView
-from .forms import UserRegistrationForm, UserProfileForm, BusinessRegistrationForm, MemberLoginForm
-from django.urls import reverse
+from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
-from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-
-
-from django.contrib.auth import get_user_model
-User = get_user_model()
-
-logger = logging.getLogger(__name__)
-
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView, UpdateView
+from django.views.generic import TemplateView
+from django.views.generic.edit import FormView, UpdateView
+
+from .forms import UserRegistrationForm, UserProfileForm, BusinessRegistrationForm, MemberLoginForm
+from .permissions import user_is_member, user_is_business
+from businesses.forms import BusinessForm as BusinessProfileForm
+from businesses.models import Business
 from giveaways.models import Entry, Winner, Giveaway
 from giveaways.views import BusinessOnlyMixin
-from .permissions import user_is_member, user_is_business
 
-from businesses.models import Business
+User = get_user_model()
+logger = logging.getLogger(__name__)
 
 from django.views.generic.edit import FormView
 
 class BusinessDashboardView(LoginRequiredMixin, BusinessOnlyMixin, TemplateView):
-    template_name = "accounts/business_dashboard.html"
+    template_name = "businesses/business_dashboard.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -72,10 +66,13 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     Krever innlogging.
     """
     template_name = "accounts/profile.html"
-    login_url = "login"
+    login_url = "accounts:member-login"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # Add user type context for accessibility improvements
+        context['is_member'] = user_is_member(self.request.user)
+        context['is_business'] = user_is_business(self.request.user)
         logger.info(f"Profilside vist for bruker: {self.request.user.username}")
         return context
 
@@ -87,8 +84,8 @@ class ProfileEditView(LoginRequiredMixin, UpdateView):
     model = User
     form_class = UserProfileForm
     template_name = "accounts/profile_edit.html"
-    success_url = reverse_lazy("profile")
-    login_url = "login"
+    success_url = reverse_lazy("accounts:member-profile")
+    login_url = "accounts:member-login"
 
     def get_object(self, queryset=None):
         return self.request.user
@@ -98,17 +95,25 @@ class ProfileEditView(LoginRequiredMixin, UpdateView):
         messages.success(self.request, "Profilen din er oppdatert!")
         return super().form_valid(form)
 
-    """
-    Viser medlemsprofil for innloggede brukere.
-    Krever innlogging.
-    """
-    template_name = "accounts/profile.html"
-    login_url = "login"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        logger.info(f"Profilside vist for bruker: {self.request.user.username}")
-        return context
+class BusinessProfileEditView(LoginRequiredMixin, BusinessOnlyMixin, UpdateView):
+    """
+    Lar bedriftsbruker redigere sin bedriftsprofil.
+    Krever innlogging og bedriftsrolle.
+    """
+    model = Business
+    form_class = BusinessProfileForm
+    template_name = "businesses/business_profile_edit.html"
+    success_url = reverse_lazy("accounts:business-dashboard")
+    login_url = "accounts:member-login"
+
+    def get_object(self, queryset=None):
+        return self.request.user.business_account
+
+    def form_valid(self, form):
+        logger.info(f"Bedriftsprofil oppdatert for: {self.request.user.business_account}")
+        messages.success(self.request, "Bedriftsprofilen er oppdatert!")
+        return super().form_valid(form)
 
 class BusinessRegisterView(FormView):
     """
@@ -148,7 +153,7 @@ class UserRegisterView(FormView):
     """
     template_name = "accounts/register.html"
     form_class = UserRegistrationForm
-    success_url = reverse_lazy('accounts:member-register')
+    success_url = reverse_lazy('accounts:dashboard')
 
     def form_valid(self, form):
         from django.contrib.auth.models import Group
@@ -166,25 +171,30 @@ class UserRegisterView(FormView):
         return redirect('accounts:dashboard')
 
 def member_login_view(request):
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"POST data: {request.POST}")
-    # Prøv å logge CSRF-token fra POST og fra context
-    csrf_token_post = request.POST.get('csrfmiddlewaretoken', None)
-    logger.info(f"CSRF token fra POST: {csrf_token_post}")
+    """
+    Håndterer innlogging for medlemmer.
+    Validerer innloggingsdata, logger inn brukeren og viser relevante meldinger.
+    Inkluderer ARIA-attributter og andre tilgjengelighetsforbedringer.
+    """
     if request.method == 'POST':
-        form = MemberLoginForm(request.POST)
+        form = MemberLoginForm(request.POST, request=request)
         if form.is_valid():
             login(request, form.cleaned_data['user'])
             messages.success(request, "Du er nå logget inn som medlem.")
             return redirect('accounts:dashboard')
     else:
         form = MemberLoginForm()
-    # Legg csrf_token eksplisitt i context for feilsøking
-    from django.middleware.csrf import get_token
-    csrf_token = get_token(request)
-    logger.info(f"CSRF token fra get_token: {csrf_token}")
-    return render(request, 'accounts/member_login.html', {'form': form, 'csrf_token': csrf_token})
+        
+    # Legg til ARIA attributter på form fields for bedre tilgjengelighet
+    if hasattr(form, 'fields'):
+        for field in form.fields.values():
+            if hasattr(field.widget, 'attrs'):
+                field.widget.attrs.update({
+                    'class': 'form-control',
+                    'aria-required': 'true' if field.required else 'false'
+                })
+    
+    return render(request, 'accounts/member_login.html', {'form': form})
 
 
 
@@ -198,7 +208,7 @@ def custom_logout_view(request):
 # BusinessProfileEditView er fjernet. Bruk bedriftsprofil-redigering fra businesses/views.py.
     model = Business
     form_class = BusinessProfileForm
-    template_name = "accounts/business_profile_edit.html"
+    template_name = "businesses/business_profile_edit.html"
     success_url = "/accounts/dashboard/"
     login_url = "login"
 
@@ -217,33 +227,48 @@ def custom_logout_view(request):
 @login_required
 def dashboard_view(request):
     """
-    Viser dashboard for innlogget bedrift med giveaways-oversikt og bedriftsinfo.
+    Viser dashboard for innlogget bruker. 
+    For vanlige medlemmer vises deltakelser i giveaways og gevinster.
+    For bedriftsbrukere vises bedriftsinfo og giveaways-oversikt.
     """
     user = request.user
     context = {"user": user}
 
-    if hasattr(user, 'business_profile'):
-        business_profile = user.business_profile
+    # Sjekk om brukeren er en bedriftsbruker 
+    if hasattr(user, 'business_account') and user.business_account:
+        # Håndterer bedriftsbruker
+        business = user.business_account
         try:
-            business = Business.objects.get(user=user)
             giveaways = Giveaway.objects.filter(business=business)
             giveaways_active = giveaways.filter(is_active=True)
             giveaways_ended = giveaways.filter(is_active=False)
             giveaways_with_winner = giveaways.filter(winner__isnull=False)
             giveaways_log = giveaways.order_by('-created_at')[:10]
-        except Business.DoesNotExist:
-            business = None
-            giveaways_active = []
-            giveaways_ended = []
-            giveaways_with_winner = []
-            giveaways_log = []
-        context.update({
-            'business_profile': business_profile,
-            'business': business,
-            'giveaways_active': giveaways_active,
-            'giveaways_ended': giveaways_ended,
-            'giveaways_with_winner': giveaways_with_winner,
-            'giveaways_log': giveaways_log,
-        })
+            
+            # Omdirigerer til bedrifts-dashboard
+            return HttpResponseRedirect(reverse('accounts:business_dashboard'))
+        except Exception as e:
+            logger.error(f"Feil ved lasting av bedriftsdashboard: {e}")
+    else:
+        # Håndterer vanlig medlem
+        try:
+            # Henter alle deltakelser for brukeren
+            participations = Entry.objects.filter(user=user).select_related('giveaway').order_by('-created_at')
+            
+            # Teller antall gevinster
+            wins = Winner.objects.filter(user=user).count()
+            
+            # Henter nylige giveaways for medlemmet
+            recent_entries = participations[:5]
+            
+            context.update({
+                'participations': participations,
+                'recent_entries': recent_entries,
+                'wins': wins,
+            })
+        except Exception as e:
+            logger.error(f"Feil ved lasting av medlems-dashboard: {e}")
+            messages.error(request, "Det oppsto en feil ved lasting av dashboardet. Vennligst prøv igjen senere.")
+    
     return render(request, 'accounts/dashboard.html', context)
 

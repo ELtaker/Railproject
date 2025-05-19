@@ -1,0 +1,16 @@
+{% comment %}
+Component template for Bootstrap 5 loading spinner
+Usage: {% include "components/spinner.html" with size=size text=text %}
+Parameters:
+  - size: Optional size (sm, md, lg)
+  - text: Optional loading text to display
+{% endcomment %}
+
+<div class="d-flex justify-content-center align-items-center" role="status">
+  <div class="spinner-border {% if size %}spinner-border-{{ size }}{% endif %} text-primary me-2" aria-hidden="true"></div>
+  {% if text %}
+  <span>{{ text }}</span>
+  {% else %}
+  <span class="visually-hidden">Laster...</span>
+  {% endif %}
+</div>

@@ -1,16 +1,15 @@
-from django.contrib.auth.models import AbstractUser, AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.utils import timezone
-import logging
-
-logger = logging.getLogger(__name__)
+from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 class User(AbstractUser):
     """
-    Utvidet bruker for Raildrops.
-    Inneholder kun generelle brukerfelt, og kan utvides med flere felt etter behov.
-    Følger PEP8, bruker meaningful comments og robust validering.
+    Custom user model for Raildrops.
+    Uses email as the primary login identifier and enforces unique, lowercase emails.
+    Includes profile image and city fields.
     """
+    email = models.EmailField(_('email address'), unique=True, help_text="Unik e-postadresse for innlogging.")
     profile_image = models.ImageField(
         upload_to='profile_pics/',
         blank=True,
@@ -19,18 +18,13 @@ class User(AbstractUser):
     )
     city = models.CharField(max_length=100, blank=True, help_text="Brukerens bostedsby/sted.")
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']  # username is still required for admin compatibility
+
     def __str__(self) -> str:
-        """
-        Returnerer e-post hvis tilgjengelig, ellers brukernavn.
-        """
         return self.email or self.username
 
     def clean(self):
-        """
-        Ekstra validering for User-modellen.
-        Sjekker at by ikke inneholder tall og at e-post har gyldig format.
-        Kan utvides med flere regler.
-        """
         from django.core.exceptions import ValidationError
         import re
         if self.city and any(char.isdigit() for char in self.city):
@@ -39,22 +33,19 @@ class User(AbstractUser):
         if self.email and not re.match(email_regex, self.email):
             raise ValidationError("Ugyldig e-postadresse.")
 
+    def save(self, *args, **kwargs):
+        if self.email:
+            self.email = self.email.lower()
+        super().save(*args, **kwargs)
+
     def email_user(self, subject, message, from_email=None, **kwargs):
-        """
-        Sender e-post til brukeren. Robust mot feil.
-        """
         from django.core.mail import send_mail, BadHeaderError
         try:
             send_mail(subject, message, from_email, [self.email], **kwargs)
         except BadHeaderError:
-            # Logg feilen hvis ønskelig
-            pass
+            pass  # Log error or handle appropriately
         except Exception as e:
-            # Logg eller håndter andre e-postfeil
-            pass
-
-from django.conf import settings
-from django.db import models
+            pass  # Log or handle other email errors
 
 class MemberProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="member_profile")
@@ -64,5 +55,3 @@ class MemberProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.city or ''}"
-
-# BusinessProfile-modellen er fjernet. Ny bedriftslogikk bruker Business-modellen i businesses/models.py.

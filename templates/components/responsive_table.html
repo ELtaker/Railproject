@@ -1,0 +1,71 @@
+{% comment %}
+Responsive table component for Raildrops
+Follows Windsurf rules for accessibility and responsive design
+Usage: {% include "components/responsive_table.html" with headers=headers rows=rows %}
+{% endcomment %}
+
+<div class="table-responsive">
+  <table class="table table-striped align-middle">
+    <caption class="visually-hidden">{{ caption|default:"Tabelldatavisning" }}</caption>
+    <thead>
+      <tr>
+        {% for header in headers %}
+          <th scope="col">{{ header }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+        <tr>
+          {% for cell in row %}
+            {% if forloop.first %}
+              <th scope="row">{{ cell }}</th>
+            {% else %}
+              <td>{{ cell }}</td>
+            {% endif %}
+          {% endfor %}
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="{{ headers|length }}" class="text-center text-muted py-3">
+            {{ empty_message|default:"Ingen data å vise" }}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Card-based responsive view for small screens -->
+<div class="d-md-none">
+  {% for row in rows %}
+    <div class="card mb-3">
+      <div class="card-body">
+        {% for cell in row %}
+          {% if forloop.first %}
+            <h5 class="card-title">{{ cell }}</h5>
+          {% else %}
+            <p class="card-text">
+              <strong>{{ headers|index:forloop.counter0 }}:</strong> {{ cell }}
+            </p>
+          {% endif %}
+        {% endfor %}
+        
+        {% if row.actions %}
+          <div class="mt-2">
+            {{ row.actions|safe }}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <div class="alert alert-info">
+      {{ empty_message|default:"Ingen data å vise" }}
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Template filter needed for index access -->
+{% load my_filters %}
+<!-- If you don't have this filter, you'll need to create it in a templatetags directory -->
+<!-- See the note below for implementation details -->

@@ -6,6 +6,6 @@ app_name = 'giveaways'
 
 urlpatterns = [
     path('', GiveawayListView.as_view(), name='list'),
-    path('create/', GiveawayCreateView.as_view(), name='giveaway_create'),
-    path('<int:pk>/', GiveawayDetailView.as_view(), name='giveaway_detail'),
+    path('create/', GiveawayCreateView.as_view(), name='giveaway-create'),
+    path('<int:pk>/', GiveawayDetailView.as_view(), name='giveaway-detail'),
 ]

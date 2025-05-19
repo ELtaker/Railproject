@@ -3,7 +3,7 @@
 <section class="card-scroll">
     <div class="scroll-container">
         {% for giveaway in giveaways %}
-        <article class="card" onclick="window.location.href='{% url 'giveaways:giveaway_detail' giveaway.pk %}'" style="cursor:pointer;">
+        <article class="card" tabindex="0" role="button" aria-label="Se detaljer for {{ giveaway.title }}" style="cursor:pointer;" data-url="{% url 'giveaways:giveaway-detail' giveaway.pk %}">
             {% if giveaway.image %}
                 <img src="{{ giveaway.image.url }}" alt="Premiebilde" class="card-image" />
             {% else %}
@@ -30,3 +30,23 @@
         {% endfor %}
     </div>
 </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add click event to all giveaway cards
+        document.querySelectorAll('.card[data-url]').forEach(function(card) {
+            card.addEventListener('click', function() {
+                window.location.href = this.getAttribute('data-url');
+            });
+            
+            // Add keyboard support for accessibility
+            card.addEventListener('keydown', function(e) {
+                // Navigate when Enter or Space is pressed
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    window.location.href = this.getAttribute('data-url');
+                }
+            });
+        });
+    });
+</script>

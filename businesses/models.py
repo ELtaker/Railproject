@@ -16,6 +16,10 @@ class Business(models.Model):
     website = models.URLField(blank=True, null=True)
     postal_code = models.CharField(max_length=10, blank=True)
     city = models.CharField(max_length=64, blank=True)
+    address = models.CharField(max_length=255, blank=True, null=True, verbose_name="Adresse", help_text="Gateadresse til bedriften")
+    phone = models.CharField(max_length=32, blank=True, null=True, verbose_name="Telefon", help_text="Kontakttelefon for bedriften")
+    contact_person = models.CharField(max_length=128, blank=True, null=True, verbose_name="Kontaktperson", help_text="Navn på hovedkontakt for bedriften")
+    social_media = models.JSONField(blank=True, null=True, verbose_name="Sosiale medier", help_text="Lenker til Facebook, Instagram, osv.")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
@@ -44,3 +48,18 @@ class Business(models.Model):
         except Exception as e:
             # Logg feilen hvis ønskelig
             raise
+            
+    def get_display_address(self):
+        """
+        Returnerer formatert fullstendig adresse.
+        """
+        parts = filter(None, [self.address, self.postal_code, self.city])
+        return ", ".join(parts)
+        
+    def get_social_links(self):
+        """
+        Returnerer sosiale medier som en liste av navn/url-par.
+        """
+        if not self.social_media:
+            return []
+        return [(k, v) for k, v in self.social_media.items()]

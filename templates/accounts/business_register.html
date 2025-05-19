@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load widget_tweaks %}
 {% block title %}Registrer bedrift | Raildrops{% endblock %}
 {% block content %}
 <div class="container mt-5">
@@ -14,55 +15,76 @@
                             <div class="col-md-6 mb-3">
                                 <label for="id_email" class="form-label">E-post</label>
                                 {{ form.email }}
-{{ form.email.errors }}
+                                {{ form.email.errors }}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="id_first_name" class="form-label">Fornavn</label>
                                 {{ form.first_name }}
-{{ form.first_name.errors }}
+                                {{ form.first_name.errors }}
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="id_last_name" class="form-label">Etternavn</label>
                                 {{ form.last_name }}
-{{ form.last_name.errors }}
+                                {{ form.last_name.errors }}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="id_company_name" class="form-label">Bedriftsnavn</label>
                                 {{ form.company_name }}
-{{ form.company_name.errors }}
+                                {{ form.company_name.errors }}
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="id_organization_number" class="form-label">Organisasjonsnummer</label>
                                 {{ form.organization_number }}
-{{ form.organization_number.errors }}
+                                {{ form.organization_number.errors }}
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="id_address" class="form-label">Adresse</label>
-                                {{ form.address }}
-{{ form.address.errors }}
-                            </div>
+                            
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="id_postal_code" class="form-label">Postnummer</label>
-                                {{ form.postal_code }}
-{{ form.postal_code.errors }}
+                                {% render_field form.postal_code class="form-control" aria-required="true" pattern="[0-9]{4,5}" title="Postnummer må være 4 eller 5 sifre" %}
+                                {{ form.postal_code.errors }}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="id_city" class="form-label">Poststed/by</label>
-                                {{ form.city }}
-{{ form.city.errors }}
+                                {% render_field form.city class="form-control" aria-required="true" autocomplete="address-level2" %}
+                                {{ form.city.errors }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_address" class="form-label">Gateadresse</label>
+                                {% render_field form.address class="form-control" aria-label="Gateadresse" autocomplete="address-line1" %}
+                                {{ form.address.errors }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_phone" class="form-label">Telefon</label>
+                                {% render_field form.phone class="form-control" aria-label="Telefonnummer" pattern="[0-9+\s]{8,15}" title="Telefonnummer må inneholde 8-15 sifre, kan inkludere + og mellomrom" autocomplete="tel" %}
+                                {{ form.phone.errors }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_contact_person" class="form-label">Kontaktperson</label>
+                                {% render_field form.contact_person class="form-control" aria-label="Kontaktperson" %}
+                                {{ form.contact_person.errors }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_social_media" class="form-label">Sosiale medier</label>
+                                <small class="form-text text-muted">Eksempel: {"facebook": "url", "instagram": "url"}</small>
+                                {% render_field form.social_media class="form-control" aria-label="Sosiale medier" rows="2" %}
+                                {{ form.social_media.errors }}
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="id_password1" class="form-label">Passord</label>
                                 {{ form.password1 }}
-{{ form.password1.errors }}
+                                {{ form.password1.errors }}
                                 {% if form.password1.help_text %}
                                     <div class="form-text">{{ form.password1.help_text }}</div>
                                 {% endif %}
@@ -70,27 +92,16 @@
                             <div class="col-md-6 mb-3">
                                 <label for="id_password2" class="form-label">Bekreft passord</label>
                                 {{ form.password2 }}
-{{ form.password2.errors }
+                                {{ form.password2.errors }}
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="id_description" class="form-label">Beskrivelse</label>
-                            {{ form.description }}
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_logo" class="form-label">Logo (valgfritt)</label>
-                            {{ form.logo }}
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_website" class="form-label">Nettside (valgfritt)</label>
-                            {{ form.website }}
-                        </div>
+                        
                         <div class="d-grid gap-2 mt-4">
                             <button type="submit" class="btn btn-primary btn-lg">Registrer bedriftskonto</button>
                         </div>
                     </form>
                     <div class="mt-3 text-center">
-                        Allerede medlem? <a href="{% url 'accounts:business-register' %}">Logg inn</a>
+                        Allerede medlem? <a href="{% url 'businesses:business-login' %}">Logg inn</a>
                     </div>
                 </div>
             </div>

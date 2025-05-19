@@ -17,7 +17,8 @@
             <a href="?" class="btn btn-outline-secondary">Nullstill</a>
         </div>
         <div class="col-md-2 d-grid">
-            <button type="button" class="btn btn-success" id="my-location-btn">Min lokasjon</button>
+            <button type="button" class="btn btn-success" id="my-location-btn" aria-label="Bruk min lokasjon">Min lokasjon</button>
+            <small class="form-text text-muted">Tillat posisjonering for å finne giveaways nær deg.</small>
         </div>
         <div class="col-md-2 d-grid">
             <a href="?all_dates=1" class="btn btn-outline-info{% if all_dates %} active{% endif %}">Alle datoer</a>
@@ -29,7 +30,9 @@
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100 shadow-sm">
                     {% if giveaway.image %}
-                        <img src="{{ giveaway.image.url }}" class="card-img-top" alt="{{ giveaway.title }}">
+                        <img src="{{ giveaway.image.url }}" class="card-img-top" alt="{{ giveaway.title }}" aria-label="Giveaway-bilde for {{ giveaway.title }}">
+                    {% else %}
+                        <img src="{% static 'img/default-giveaway.png' %}" class="card-img-top" alt="Ingen bilde" aria-label="Standard giveaway-bilde">
                     {% endif %}
                     <div class="card-body">
                         <h5 class="card-title">{{ giveaway.title }}</h5>
@@ -49,6 +52,38 @@
             </div>
         {% endfor %}
     </div>
+
+    {# Pagination controls #}
+    {% if is_paginated %}
+    <nav aria-label="Giveaway paginering">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_city %}&city={{ selected_city }}{% endif %}{% if selected_postal_code %}&postal_code={{ selected_postal_code }}{% endif %}{% if all_dates %}&all_dates=1{% endif %}" aria-label="Forrige side">&laquo;</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Side {{ page_obj.number }} av {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_city %}&city={{ selected_city }}{% endif %}{% if selected_postal_code %}&postal_code={{ selected_postal_code }}{% endif %}{% if all_dates %}&all_dates=1{% endif %}" aria-label="Neste side">&raquo;</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {# Location-based filtering JS placeholder #}
+    <script>
+    // TODO: Implement geolocation and auto-fill city/postal_code fields here
+    // Example:
+    // document.getElementById('my-location-btn').addEventListener('click', function() {
+    //   // Use navigator.geolocation and reverse geocoding
+    // });
+    </script>
     {% if is_paginated %}
         <nav class="mt-4">
             <ul class="pagination justify-content-center">

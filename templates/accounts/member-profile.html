@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Min Profil | Raildrops{% endblock %}
+{% block content %}
+<main class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="card-title mb-4 text-center">Min Profil</h2>
+                    <dl class="row mb-4">
+                        <dt class="col-sm-4">Brukernavn</dt>
+                        <dd class="col-sm-8">{{ user.username }}</dd>
+                        <dt class="col-sm-4">E-post</dt>
+                        <dd class="col-sm-8">{{ user.email }}</dd>
+                    </dl>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'accounts:member-profile-edit' %}" class="btn btn-primary">Rediger profil</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

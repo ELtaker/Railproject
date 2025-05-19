@@ -13,7 +13,7 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
-LOGIN_REDIRECT_URL = '/profile/'
+LOGIN_REDIRECT_URL = 'accounts:dashboard'
 
 # Application definition
 INSTALLED_APPS = [
@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    'widget_tweaks',  # Django widget tweaks for form styling
     # Project apps
     'accounts',
     'businesses',
@@ -77,9 +78,10 @@ AUTHENTICATION_BACKENDS = [
     'accounts.backends.EmailBackend',  # eller tilsvarende
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+LOGIN_REDIRECT_URL = 'accounts:dashboard'
 LOGIN_URL = 'accounts:member-login'
 LOGOUT_REDIRECT_URL = 'home'
-LOGIN_REDIRECT_URL = 'accounts:dashboard'
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

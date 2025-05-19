@@ -4,38 +4,117 @@
 {% block title %}Registrer deg | Raildrops{% endblock %}
 
 {% block content %}
+<!-- Skip link target -->
+<div id="main-content" tabindex="-1"></div>
+
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6 col-lg-5">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h2 class="card-title mb-4 text-center">Registrer deg som medlem</h2>
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body p-4">
+                    <h1 class="card-title h2 mb-4 text-center">Registrer deg som medlem</h1>
+                    
                     {% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-{% endif %}
-<form method="post" novalidate autocomplete="on">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}" role="alert">
+                            <i class="fa fa-info-circle me-2" aria-hidden="true"></i>
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post" novalidate autocomplete="on" aria-labelledby="register-heading">
                         {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {% for error in form.non_field_errors %}
+                                <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
                         {% for field in form %}
                             <div class="mb-3">
-                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                                {{ field }}
-{% for error in field.errors %}
-    <div class="invalid-feedback d-block">{{ error }}</div>
-{% endfor %}
+                                <label for="{{ field.id_for_label }}" class="form-label{% if field.field.required %} required{% endif %}">
+                                    {{ field.label }}
+                                    {% if field.field.required %}<span class="text-danger" aria-hidden="true">*</span>{% endif %}
+                                </label>
+                                
+                                <div class="input-group has-validation">
+                                    {% if field.name == 'email' %}
+                                    <span class="input-group-text" aria-hidden="true">
+                                        <i class="fa fa-envelope"></i>
+                                    </span>
+                                    {% elif field.name == 'password1' or field.name == 'password2' %}
+                                    <span class="input-group-text" aria-hidden="true">
+                                        <i class="fa fa-lock"></i>
+                                    </span>
+                                    {% elif field.name == 'username' %}
+                                    <span class="input-group-text" aria-hidden="true">
+                                        <i class="fa fa-user"></i>
+                                    </span>
+                                    {% elif field.name == 'first_name' or field.name == 'last_name' %}
+                                    <span class="input-group-text" aria-hidden="true">
+                                        <i class="fa fa-id-card"></i>
+                                    </span>
+                                    {% endif %}
+                                    
+                                    <input type="{% if field.name == 'email' %}email{% elif field.name == 'password1' or field.name == 'password2' %}password{% else %}text{% endif %}" 
+                                           name="{{ field.name }}" 
+                                           id="{{ field.id_for_label }}" 
+                                           class="form-control {% if field.errors %}is-invalid{% endif %}" 
+                                           {% if field.field.required %}required{% endif %}
+                                           {% if field.name == 'email' %}autocomplete="email"{% elif field.name == 'password1' %}autocomplete="new-password"{% elif field.name == 'password2' %}autocomplete="new-password"{% elif field.name == 'username' %}autocomplete="username"{% elif field.name == 'first_name' %}autocomplete="given-name"{% elif field.name == 'last_name' %}autocomplete="family-name"{% endif %}
+                                           aria-describedby="{{ field.id_for_label }}-help {{ field.id_for_label }}-errors"
+                                           placeholder="{{ field.field.widget.attrs.placeholder|default:'' }}">
+                                    
+                                    {% if field.name == 'password1' or field.name == 'password2' %}
+                                    <button class="btn btn-outline-secondary toggle-password" 
+                                            type="button" 
+                                            aria-label="Vis/skjul passord"
+                                            tabindex="0">
+                                        <i class="fa fa-eye" aria-hidden="true"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    {% if field.errors %}
+                                    <div id="{{ field.id_for_label }}-errors" class="invalid-feedback">
+                                        {% for error in field.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
                                 {% if field.help_text %}
-                                    <div class="form-text">{{ field.help_text }}</div>
+                                <small id="{{ field.id_for_label }}-help" class="form-text text-muted">{{ field.help_text }}</small>
                                 {% endif %}
-                                {% for error in field.errors %}
-                                    <div class="invalid-feedback d-block">{{ error }}</div>
-                                {% endfor %}
                             </div>
                         {% endfor %}
-                        <button type="submit" class="btn btn-primary w-100">Registrer</button>
+                        
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fa fa-user-plus me-2" aria-hidden="true"></i> Registrer
+                            </button>
+                        </div>
                     </form>
-                    <div class="mt-3 text-center">
-                        Allerede medlem? <a href="{% url 'accounts:member-login' %}">Logg inn</a>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <hr class="flex-grow-1 me-2">
+                        <span class="text-muted">eller</span>
+                        <hr class="flex-grow-1 ms-2">
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Allerede medlem? 
+                            <a href="{% url 'accounts:member-login' %}" class="fw-bold" aria-label="Gå til innlogging for eksisterende brukere">Logg inn</a>
+                        </p>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'accounts:business-register' %}" class="btn btn-outline-secondary btn-sm" aria-label="Registrer deg som bedrift i stedet">
+                            <i class="fa fa-building me-1" aria-hidden="true"></i> Registrer deg som bedrift i stedet
+                        </a>
                     </div>
                 </div>
             </div>

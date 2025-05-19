@@ -1,13 +1,17 @@
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
 
+from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth import get_user_model
+
 class EmailBackend(ModelBackend):
     """
-    Autentiserer brukere (User) med e-post og passord.
+    Authenticate users using email (case-insensitive) and password.
+    Compatible with custom user models where email is unique and primary.
     """
     def authenticate(self, request, username=None, password=None, **kwargs):
-        email = username or kwargs.get('email')
-        if email is None or password is None:
+        email = (username or kwargs.get('email') or '').strip().lower()
+        if not email or not password:
             return None
         UserModel = get_user_model()
         try:

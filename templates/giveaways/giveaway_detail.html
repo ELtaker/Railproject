@@ -87,7 +87,17 @@
               <h4>{{ giveaway.signup_question }}</h4>
             {% endif %}
             {{ entry_form.answer.errors }}
-            {{ entry_form.user_location_city }}
+            <div class="mb-3">
+              <label for="id_user_location_city" class="form-label">Din by <span class="text-danger">*</span></label>
+              {{ entry_form.user_location_city }}
+              <small class="form-text text-muted">Din by må samsvare med bedriftens lokasjon ({{ business.city }}) for å delta.</small>
+              <div class="mt-2 d-grid">
+                <button type="button" id="use-my-location" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-geo-alt"></i> Bruk min nåværende posisjon
+                </button>
+              </div>
+              <div id="location-status" class="mt-2 small d-none alert"></div>
+            </div>
             {% for radio in entry_form.answer %}
               <div class="form-check mt-3 my-1 mx-4">
                 {{ radio.tag }}
@@ -97,26 +107,76 @@
             <div class="giveaway-submit text-center my-4 mx-4">
               <button class="btn btn-primary" type="submit">Delta gratis</button>
             </div>
-            <input type="hidden" name="user_location_city" id="id_user_location_city">
+
             {% if entry_form.non_field_errors %}
               <div class="alert alert-danger">{{ entry_form.non_field_errors }}</div>
             {% endif %}
           </form>
           <script>
-            // Geolokasjon og reverse-geocoding (OpenStreetMap Nominatim)
             document.addEventListener('DOMContentLoaded', function() {
-              if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                  const lat = position.coords.latitude;
-                  const lon = position.coords.longitude;
-                  fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=no`)
-                    .then(response => response.json())
-                    .then(data => {
-                      let city = data.address.city || data.address.town || data.address.village || data.address.hamlet || data.address.municipality;
-                      if (!city && data.address.county) city = data.address.county;
-                      const cityField = document.querySelector('input[name="user_location_city"]');
-                      if (cityField) cityField.value = city;
+              const locationButton = document.getElementById('use-my-location');
+              const cityField = document.getElementById('id_user_location_city');
+              const statusDiv = document.getElementById('location-status');
+              const businessCity = "{{ business.city }}";
+              
+              // Function to update status message
+              function updateStatus(message, type) {
+                statusDiv.textContent = message;
+                statusDiv.className = `mt-2 small alert alert-${type}`;
+                statusDiv.classList.remove('d-none');
+              }
+              
+              // Get location when button is clicked
+              if (locationButton) {
+                locationButton.addEventListener('click', function() {
+                  statusDiv.classList.remove('d-none');
+                  statusDiv.className = 'mt-2 small alert alert-info';
+                  statusDiv.textContent = 'Henter din posisjon...';
+                  
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                      const lat = position.coords.latitude;
+                      const lon = position.coords.longitude;
+                      
+                      // Use OpenStreetMap Nominatim for reverse geocoding
+                      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=no`)
+                        .then(response => response.json())
+                        .then(data => {
+                          let city = data.address.city || data.address.town || data.address.village || data.address.hamlet || data.address.municipality;
+                          if (!city && data.address.county) city = data.address.county;
+                          
+                          // Update city field
+                          if (cityField) {
+                            cityField.value = city;
+                            
+                            // Check if location matches business city
+                            if (city.toLowerCase() === businessCity.toLowerCase()) {
+                              updateStatus(`Din posisjon (${city}) matcher bedriftens lokasjon!`, 'success');
+                            } else {
+                              updateStatus(`Merk: Din posisjon (${city}) er ikke i samme by som bedriften (${businessCity}). Du må være i ${businessCity} for å delta.`, 'warning');
+                            }
+                          }
+                        })
+                        .catch(error => {
+                          console.error('Error during reverse geocoding:', error);
+                          updateStatus('Kunne ikke bestemme byposisjon fra koordinater.', 'danger');
+                        });
+                    }, function(error) {
+                      // Handle geolocation errors
+                      let errorMsg = 'Kunne ikke hente din posisjon.';
+                      if (error.code === error.PERMISSION_DENIED) {
+                        errorMsg = 'Du må tillate posisjonsdeling i nettleseren for å bruke denne funksjonen.';
+                      }
+                      updateStatus(errorMsg, 'danger');
+                    }, {
+                      // Geolocation options
+                      enableHighAccuracy: true,
+                      timeout: 10000,
+                      maximumAge: 0
                     });
+                  } else {
+                    updateStatus('Nettleseren din støtter ikke geolokasjon.', 'danger');
+                  }
                 });
               }
             });

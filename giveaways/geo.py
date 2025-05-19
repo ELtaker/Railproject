@@ -1,0 +1,1 @@
+user_location_city = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Din by'}), required=True)

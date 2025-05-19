@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load static %}
+{% load my_filters from businesses.templatetags.my_filters %}
+
+{% block title %}Tilgjengelighetsfunksjoner | Raildrops{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Tilgjengelighetsfunksjoner i Raildrops</h1>
+    <p class="lead">En demonstrasjon av tilgjengelighetsfunksjonene vi har implementert for å sikre at Raildrops er tilgjengelig for alle brukere.</p>
+
+    {% with demo_rows=demo_rows|default:"[[\"Eksempel AS\", \"Oslo\", \"Aktiv\", \"<a href=\"#\" class=\"btn btn-sm btn-outline-primary\">Se detaljer</a>\"], [\"Test Bedrift\", \"Bergen\", \"Inaktiv\", \"<a href=\"#\" class=\"btn btn-sm btn-outline-secondary\">Se detaljer</a>\"], [\"Demo Selskap\", \"Trondheim\", \"Venter\", \"<a href=\"#\" class=\"btn btn-sm btn-outline-info\">Se detaljer</a>\"]]|safe %}
+
+    <div class="row mt-5">
+        <!-- Feature Section: Color Theme Toggle -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h5 mb-0">Mørk/Lys modus</h2>
+                </div>
+                <div class="card-body">
+                    <p>Du kan bytte mellom mørk og lys modus ved å trykke på knappen nederst til høyre på siden.</p>
+                    <p class="mb-0"><strong>Funksjon:</strong> Forbedrer lesbarhet og reduserer øyebelastning</p>
+                </div>
+                <div class="card-footer bg-light">
+                    <code>data-bs-theme="dark"</code> på html-elementet
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Section: Toast Messages -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h2 class="h5 mb-0">Toast-meldinger</h2>
+                </div>
+                <div class="card-body">
+                    <p>Systemet viser nå meldinger som toasts i stedet for tradisjonelle alerts.</p>
+                    <button id="demo-toast" class="btn btn-success">Vis eksempel-toast</button>
+                </div>
+                <div class="card-footer bg-light">
+                    <code>{% include "components/toast.html" with message="Melding" type="success" %}</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Section: Loading Spinners -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h2 class="h5 mb-0">Lasteindikatorer</h2>
+                </div>
+                <div class="card-body">
+                    <p>Vi bruker lasteindikatorer for å informere brukere om at data lastes.</p>
+                    <div class="text-center mt-3">
+                        {% include "components/spinner.html" with text="Laster data..." %}
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <code>{% include "components/spinner.html" with text="Laster data..." %}</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Section: ARIA and Keyboard Navigation -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-warning">
+                    <h2 class="h5 mb-0">ARIA og tastaturnavigasjon</h2>
+                </div>
+                <div class="card-body">
+                    <p>Alle interaktive elementer er fullt tilgjengelige med tastatur og har ARIA-attributter.</p>
+                    <p class="mb-0"><strong>Test:</strong> Prøv å navigere på siden med bare Tab-tasten.</p>
+                </div>
+                <div class="card-footer bg-light">
+                    <code>aria-label, role, aria-live</code> og lignende attributter
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Section: Responsive Tables -->
+        <div class="col-md-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="h5 mb-0">Responsive tabeller</h2>
+                </div>
+                <div class="card-body">
+                    <p>Tabeller tilpasser seg ulike skjermstørrelser og er tilgjengelige for skjermlesere.</p>
+                    
+                    {% with headers="Navn,By,Status,Handlinger"|split:"," %}
+                        {% include "components/responsive_table.html" with headers=headers rows=demo_rows caption="Eksempel på responsiv tabell" %}
+                    {% endwith %}
+                </div>
+                <div class="card-footer bg-light">
+                    <code>{% include "components/responsive_table.html" with headers=headers rows=rows %}</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Section: Skip to Content -->
+        <div class="col-md-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h2 class="h5 mb-0">Hopp til innhold</h2>
+                </div>
+                <div class="card-body">
+                    <p>En "hopp til innhold"-lenke vises når du begynner å navigere med tastatur.</p>
+                    <p><strong>Test:</strong> Trykk på Tab-tasten når siden lastes for å se lenken.</p>
+                    <div class="alert alert-info">
+                        Dette er spesielt nyttig for brukere som bruker tastatur eller skjermlesere for å navigere gjennom nettsiden.
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <code>&lt;a href="#main-content" class="visually-hidden-focusable"&gt;</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endwith %}
+{% endblock %}
+
+<script>
+// Demo Toast Button
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('demo-toast').addEventListener('click', function() {
+        // Create a toast
+        const toastContainer = document.querySelector('.toast-container');
+        const toastElement = document.createElement('div');
+        toastElement.className = 'toast align-items-center text-white bg-success border-0 my-2';
+        toastElement.setAttribute('role', 'alert');
+        toastElement.setAttribute('aria-live', 'polite');
+        toastElement.setAttribute('aria-atomic', 'true');
+        
+        toastElement.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    Dette er en demonstrasjon av toast-meldinger!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Lukk"></button>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toastElement);
+        
+        // Initialize and show the toast
+        const toast = new bootstrap.Toast(toastElement, {
+            autohide: true,
+            delay: 5000
+        });
+        toast.show();
+    });
+});
+
+// Helper function for the template
+function split(str, separator) {
+    return str.split(separator);
+}
+</script>
+{% endblock %}

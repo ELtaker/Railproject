@@ -8,7 +8,7 @@ def is_member(user) -> bool:
     """
     return (
         user.is_authenticated
-        and not hasattr(user, "business_profile")
+        and not hasattr(user, "business_account")
         and user.groups.filter(name="Members").exists()
     )
 

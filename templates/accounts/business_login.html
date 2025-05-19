@@ -7,32 +7,26 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h2 class="card-title mb-4 text-center">Logg inn som bedrift</h2>
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                        {% endfor %}
-                    {% endif %}
                     <form method="post" novalidate autocomplete="on">
                         {% csrf_token %}
                         {{ form.non_field_errors }}
                         <div class="mb-3">
                             <label for="id_email" class="form-label">E-post</label>
                             {{ form.email }}
-                            {% for error in form.email.errors %}
-                                <div class="invalid-feedback d-block">{{ error }}</div>
-                            {% endfor %}
+                            {{ form.email.errors }}
                         </div>
                         <div class="mb-3">
                             <label for="id_password" class="form-label">Passord</label>
                             {{ form.password }}
-                            {% for error in form.password.errors %}
-                                <div class="invalid-feedback d-block">{{ error }}</div>
-                            {% endfor %}
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Logg inn som bedrift</button>
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary">Logg inn</button>
+                        </div>
                     </form>
-                    <div class="mt-3 text-center">
-                        <a href="{% url 'accounts:member-login' %}">Logg inn som medlem</a>
+                    <div class="text-center mt-3">
+                        <span>Har du ikke en bedriftskonto?</span>
+                        <a href="{% url 'accounts:business-register' %}" class="btn btn-link">Registrer bedrift</a>
+                        <a href="{% url 'accounts:member-login' %}" class="btn btn-link">Logg inn som medlem</a>
                     </div>
                 </div>
             </div>

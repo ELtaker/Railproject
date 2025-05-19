@@ -9,7 +9,7 @@ from accounts.views import HomeTestPageView
 urlpatterns = [
     path('admin/', admin.site.urls),
     # Inkluderer bedriftsruter
-    path('business/', include('businesses.urls')),
+    path('business/', include(('businesses.urls', 'businesses'), namespace='businesses')),
     # Inkluderer giveaways
     path('giveaways/', include(('giveaways.urls', 'giveaways'), namespace='giveaways')),
     # Forside med giveaways-scroll koblet til HomeTestPageView
@@ -17,6 +17,8 @@ urlpatterns = [
     # Inkluderer brukerregistrering og andre kontorelaterte ruter
     path('accounts/', include(('accounts.urls', 'accounts'), namespace='accounts')),
     path('member-login', RedirectView.as_view(url='/accounts/member/login/', permanent=True)),
+    # Tilgjengelighetsdemonstrasjon
+    path('accessibility-demo/', TemplateView.as_view(template_name='accessibility_demo.html'), name='accessibility_demo'),
 ]
 
 if settings.DEBUG:

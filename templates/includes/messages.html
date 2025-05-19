@@ -1,0 +1,43 @@
+{% comment %}
+Enhanced message handling for Raildrops
+Converts Django messages to Bootstrap 5 toasts
+Follows Windsurf rules for accessibility and XSS mitigation
+{% endcomment %}
+
+{% if messages %}
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1060">
+    {% for message in messages %}
+        {% with message_type=message.tags|default:"info" %}
+            <div class="toast align-items-center text-white bg-{{ message_type }} border-0 my-2" 
+                 role="alert" 
+                 aria-live="polite" 
+                 aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        {{ message }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Lukk"></button>
+                </div>
+            </div>
+        {% endwith %}
+    {% endfor %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all toasts
+        var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+        var toastList = toastElList.map(function(toastEl) {
+            return new bootstrap.Toast(toastEl, {
+                autohide: true,
+                delay: 5000
+            });
+        });
+        
+        // Show all toasts
+        toastList.forEach(function(toast) {
+            toast.show();
+        });
+    });
+</script>
+{% endif %}

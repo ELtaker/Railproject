@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% block title %}Rediger Bedriftsprofil | Raildrops{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h2 class="card-title mb-4 text-center">Rediger Bedriftsprofil</h2>
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">Bedriftsnavn</label>
+                            {% render_field form.name class="form-control" aria-label="Bedriftsnavn" %}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_website" class="form-label">Nettside</label>
+                            {% render_field form.website class="form-control" aria-label="Nettside" %}
+                            {% if form.website.errors %}
+                                <div class="invalid-feedback d-block">{{ form.website.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Beskrivelse</label>
+                            {% render_field form.description class="form-control" aria-label="Beskrivelse" %}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_postal_code" class="form-label">Postnummer</label>
+                            {% render_field form.postal_code class="form-control" aria-label="Postnummer" %}
+                            {% if form.postal_code.errors %}
+                                <div class="invalid-feedback d-block">{{ form.postal_code.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_city" class="form-label">By</label>
+                            {% render_field form.city class="form-control" aria-label="By" %}
+                            {% if form.city.errors %}
+                                <div class="invalid-feedback d-block">{{ form.city.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_address" class="form-label">Gateadresse</label>
+                            {% render_field form.address class="form-control" aria-label="Gateadresse" %}
+                            {% if form.address.errors %}
+                                <div class="invalid-feedback d-block">{{ form.address.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_phone" class="form-label">Telefon</label>
+                            {% render_field form.phone class="form-control" aria-label="Telefon" %}
+                            {% if form.phone.errors %}
+                                <div class="invalid-feedback d-block">{{ form.phone.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_contact_person" class="form-label">Kontaktperson</label>
+                            {% render_field form.contact_person class="form-control" aria-label="Kontaktperson" %}
+                            {% if form.contact_person.errors %}
+                                <div class="invalid-feedback d-block">{{ form.contact_person.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_social_media" class="form-label">Sosiale medier</label>
+                            <small class="form-text text-muted">Eksempel: {"facebook": "url", "instagram": "url"}</small>
+                            {% render_field form.social_media class="form-control" aria-label="Sosiale medier" rows="2" %}
+                            {% if form.social_media.errors %}
+                                <div class="invalid-feedback d-block">{{ form.social_media.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_logo" class="form-label">Logo</label>
+                            {% if form.instance.logo %}
+                                <div class="mb-2">
+                                    <img src="{{ form.instance.logo.url }}" alt="Logo" style="max-height:80px;max-width:160px;">
+                                </div>
+                            {% endif %}
+                            {% render_field form.logo class="form-control" aria-label="Logo" %}
+                            {% if form.logo.errors %}
+                                <div class="invalid-feedback d-block">{{ form.logo.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary">Lagre endringer</button>
+                        </div>
+                    </form>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'accounts:business-dashboard' %}" class="btn btn-link">Tilbake til dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -5,7 +5,7 @@ def user_is_member(user) -> bool:
     """
     return (
         user.is_authenticated
-        and not hasattr(user, "business_profile")
+        and not hasattr(user, "business_account")
         and user.groups.filter(name="Members").exists()
     )
 
@@ -13,9 +13,9 @@ def user_is_member(user) -> bool:
 def user_is_business(user) -> bool:
     """
     Returnerer True hvis brukeren er en bedriftsbruker.
-    Nå: autentisert og har business_profile.
+    Nå: autentisert og har business_account.
     Brukes for å gi tilgang til bedriftsfunksjoner.
     """
-    return user.is_authenticated and hasattr(user, 'business_profile')
+    return user.is_authenticated and hasattr(user, 'business_account')
 
 # Tester for permissions kan legges i tests/test_permissions.py

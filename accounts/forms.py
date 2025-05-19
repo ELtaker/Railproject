@@ -14,16 +14,24 @@ from django.contrib.auth import authenticate
 
 class MemberLoginForm(forms.Form):
     """Login-form for medlemmer."""
-    email: forms.EmailField = forms.EmailField(label=_('E-post'))
-    password: forms.CharField = forms.CharField(label=_('Passord'), widget=forms.PasswordInput)
+    email = forms.EmailField(label=_('E-post'))
+    password = forms.CharField(label=_('Passord'), widget=forms.PasswordInput)
 
-    def clean(self) -> dict:
-        """Validerer brukerens innloggingsdata."""
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
         cleaned_data = super().clean()
         email = cleaned_data.get('email')
         password = cleaned_data.get('password')
         if email and password:
-            user = authenticate(request=self.request if hasattr(self, 'request') else None, email=email, password=password, backend='accounts.backends.EmailBackend')
+            user = authenticate(
+                request=self.request,
+                email=email,
+                password=password,
+                backend='accounts.backends.EmailBackend'
+            )
             if user is None:
                 logger.warning(f"Mislykket innlogging for e-post: {email}")
                 raise forms.ValidationError(_('Ugyldig e-post eller passord.'))

@@ -12,32 +12,63 @@
                         {{ form.non_field_errors }}
                         <div class="mb-3">
                             <label for="id_name" class="form-label">Bedriftsnavn</label>
-                            {{ form.name }}
+                            {{ form.name|add_class:'form-control' }}
+                            {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="mb-3">
                             <label for="id_description" class="form-label">Beskrivelse</label>
-                            {{ form.description }}
+                            {{ form.description|add_class:'form-control' }}
+                            {% if form.description.errors %}<div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="mb-3">
                             <label for="id_logo" class="form-label">Logo</label><br>
                             {% if form.instance.logo %}
                                 <img src="{{ form.instance.logo.url }}" alt="Logo" class="img-fluid mb-2 rounded" style="max-height: 100px;">
                             {% endif %}
-                            {{ form.logo }}
+                            {{ form.logo|add_class:'form-control' }}
+                            {% if form.logo.errors %}<div class="invalid-feedback d-block">{{ form.logo.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="id_postal_code" class="form-label">Postnummer</label>
-                                {{ form.postal_code }}
+                                {{ form.postal_code|add_class:'form-control' }}
+                                {% if form.postal_code.errors %}<div class="invalid-feedback d-block">{{ form.postal_code.errors.0 }}</div>{% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="id_city" class="form-label">Sted</label>
-                                {{ form.city }}
+                                {{ form.city|add_class:'form-control' }}
+                                {% if form.city.errors %}<div class="invalid-feedback d-block">{{ form.city.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_address" class="form-label">Gateadresse</label>
+                                {{ form.address|add_class:'form-control' }}
+                                {% if form.address.errors %}<div class="invalid-feedback d-block">{{ form.address.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_phone" class="form-label">Telefon</label>
+                                {{ form.phone|add_class:'form-control' }}
+                                {% if form.phone.errors %}<div class="invalid-feedback d-block">{{ form.phone.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_contact_person" class="form-label">Kontaktperson</label>
+                                {{ form.contact_person|add_class:'form-control' }}
+                                {% if form.contact_person.errors %}<div class="invalid-feedback d-block">{{ form.contact_person.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_social_media" class="form-label">Sosiale medier</label>
+                                <small class="form-text text-muted">Eksempel: {"facebook": "url", "instagram": "url"}</small>
+                                {{ form.social_media|add_class:'form-control' }}
+                                {% if form.social_media.errors %}<div class="invalid-feedback d-block">{{ form.social_media.errors.0 }}</div>{% endif %}
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="id_website" class="form-label">Nettside</label>
-                            {{ form.website }}
+                            {{ form.website|add_class:'form-control' }}
+                            {% if form.website.errors %}<div class="invalid-feedback d-block">{{ form.website.errors.0 }}</div>{% endif %}
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Lagre endringer</button>
                     </form>
@@ -45,7 +76,7 @@
                         {% if is_business %}
                         <a href="{% url 'password_change' %}" class="btn btn-outline-secondary">Endre passord</a>
                         {% endif %}
-                        <a href="{% url 'accounts:profile' %}" class="btn btn-link">Tilbake til profil</a>
+                        <a href="{% url 'businesses:business_dashboard' %}" class="btn btn-link">Tilbake til bedriftsdashboard</a>
                     </div>
                 </div>
             </div>

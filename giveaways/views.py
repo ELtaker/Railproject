@@ -75,11 +75,34 @@ class GiveawayDetailView(DetailView):
         giveaway = self.get_object()
         user = self.request.user
         entries_count = giveaway.entries.count()
+        
+        # Import is_member function that we fixed earlier
+        from .permissions import is_member
+        
+        # Check if user is a member
+        is_member_status = is_member(user) if user.is_authenticated else False
+        
+        # Check if user has already joined this giveaway
+        has_joined = False
+        if user.is_authenticated:
+            has_joined = giveaway.entries.filter(user=user).exists()
+            
+        # Check if user can participate
         kan_delta = can_enter_giveaway(user, giveaway)
+        
+        # Only create entry form if user can participate
         entry_form = EntryForm(giveaway=giveaway, request=self.request) if kan_delta else None
+        
+        # Get business info for the template
+        business = giveaway.business
+        
         context.update({
             "giveaway": giveaway,
+            "business": business,
             "entries_count": entries_count,
+            "is_member": is_member_status,
+            "is_business": hasattr(user, "business_account") if user.is_authenticated else False,
+            "has_joined": has_joined,
             "kan_delta": kan_delta,
             "entry_form": entry_form,
         })
@@ -140,4 +163,4 @@ class GiveawayCreateView(LoginRequiredMixin, BusinessOnlyMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy("business_profile")
+        return reverse_lazy("accounts:business-profile")
