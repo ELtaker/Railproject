@@ -5,23 +5,23 @@
     <h1 class="mb-4 text-center">Giveaways</h1>
     <form method="get" class="row g-2 mb-4 justify-content-center">
         <div class="col-md-3">
-            <input type="text" name="city" value="{{ selected_city }}" class="form-control" placeholder="Sted (f.eks. Oslo)">
+            <input type="text" name="city" value="{{ selected_city }}" class="form-control" placeholder="City (e.g. Oslo)">
         </div>
         <div class="col-md-3">
-            <input type="text" name="postal_code" value="{{ selected_postal_code }}" class="form-control" placeholder="Postnummer">
+            <input type="text" name="postal_code" value="{{ selected_postal_code }}" class="form-control" placeholder="Postal Code">
         </div>
         <div class="col-md-2 d-grid">
-            <button type="submit" class="btn btn-primary">Filtrer</button>
+            <button type="submit" class="btn btn-primary">Filter</button>
         </div>
         <div class="col-md-2 d-grid">
-            <a href="?" class="btn btn-outline-secondary">Nullstill</a>
+            <a href="?" class="btn btn-outline-secondary">Reset</a>
         </div>
         <div class="col-md-2 d-grid">
-            <button type="button" class="btn btn-success" id="my-location-btn" aria-label="Bruk min lokasjon">Min lokasjon</button>
-            <small class="form-text text-muted">Tillat posisjonering for å finne giveaways nær deg.</small>
+            <button type="button" class="btn btn-success" id="my-location-btn" aria-label="Use my location">My Location</button>
+            <small class="form-text text-muted">Allow positioning to find giveaways near you.</small>
         </div>
         <div class="col-md-2 d-grid">
-            <a href="?all_dates=1" class="btn btn-outline-info{% if all_dates %} active{% endif %}">Alle datoer</a>
+            <a href="?all_dates=1" class="btn btn-outline-info{% if all_dates %} active{% endif %}">All Dates</a>
         </div>
     </form>
     <div id="location-error" class="alert alert-warning d-none" role="alert"></div>
@@ -30,9 +30,9 @@
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100 shadow-sm">
                     {% if giveaway.image %}
-                        <img src="{{ giveaway.image.url }}" class="card-img-top" alt="{{ giveaway.title }}" aria-label="Giveaway-bilde for {{ giveaway.title }}">
+                        <img src="{{ giveaway.image.url }}" class="card-img-top" alt="{{ giveaway.title }}" aria-label="Giveaway image for {{ giveaway.title }}">
                     {% else %}
-                        <img src="{% static 'img/default-giveaway.png' %}" class="card-img-top" alt="Ingen bilde" aria-label="Standard giveaway-bilde">
+                        <img src="{% static 'img/default-giveaway.png' %}" class="card-img-top" alt="No image" aria-label="Default giveaway image">
                     {% endif %}
                     <div class="card-body">
                         <h5 class="card-title">{{ giveaway.title }}</h5>
@@ -41,14 +41,14 @@
                             {{ giveaway.business.city }}{% if giveaway.business.postal_code %}, {{ giveaway.business.postal_code }}{% endif %}
                         </div>
                         <p class="card-text">{{ giveaway.description|truncatewords:15 }}</p>
-                        <div class="mb-2 small">Trekningsdato: {{ giveaway.end_date|date:"d.m.Y H:i" }}</div>
-                        <a href="{% url 'business_public_profile' giveaway.business.pk %}" class="btn btn-link p-0">Se bedrift</a>
+                        <div class="mb-2 small">Drawing date: {{ giveaway.end_date|date:"d.m.Y H:i" }}</div>
+                        <a href="{% url 'business_public_profile' giveaway.business.pk %}" class="btn btn-link p-0">View business</a>
                     </div>
                 </div>
             </div>
         {% empty %}
             <div class="col-12">
-                <div class="alert alert-info">Ingen giveaways funnet for valgt filter.</div>
+                <div class="alert alert-info">No giveaways found for selected filter.</div>
             </div>
         {% endfor %}
     </div>

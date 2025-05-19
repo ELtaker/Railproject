@@ -14,8 +14,8 @@ from django.views.generic import ListView, DetailView
 
 class GiveawayListView(ListView):
     """
-    Offentlig oversikt over aktive giveaways. Kan filtreres på sted/postnummer.
-    Viser kun aktive giveaways (nå mellom start og slutt).
+    Public overview of active giveaways. Can be filtered by location/postal code.
+    Shows only active giveaways (currently between start and end dates).
     """
     model = Giveaway
     template_name = "giveaways/giveaway_list.html"
@@ -59,13 +59,13 @@ class GiveawayDetailView(DetailView):
         kwargs = {'giveaway': self.get_object(), 'request': self.request}
         if post:
             kwargs['data'] = self.request.POST
-        # Fjern custom kwargs før vi sender til ModelForm
+        # Remove custom kwargs before sending to ModelForm
         form_kwargs = {}
         if 'data' in kwargs:
             form_kwargs['data'] = kwargs['data']
         if 'files' in kwargs:
             form_kwargs['files'] = kwargs['files']
-        # Disse brukes kun i vår __init__
+        # These are only used in our __init__
         form_kwargs['giveaway'] = kwargs['giveaway']
         form_kwargs['request'] = kwargs['request']
         return form_kwargs
@@ -88,10 +88,10 @@ class GiveawayDetailView(DetailView):
             has_joined = giveaway.entries.filter(user=user).exists()
             
         # Check if user can participate
-        kan_delta = can_enter_giveaway(user, giveaway)
+        can_participate = can_enter_giveaway(user, giveaway)
         
         # Only create entry form if user can participate
-        entry_form = EntryForm(giveaway=giveaway, request=self.request) if kan_delta else None
+        entry_form = EntryForm(giveaway=giveaway, request=self.request) if can_participate else None
         
         # Get business info for the template
         business = giveaway.business
@@ -103,7 +103,7 @@ class GiveawayDetailView(DetailView):
             "is_member": is_member_status,
             "is_business": hasattr(user, "business_account") if user.is_authenticated else False,
             "has_joined": has_joined,
-            "kan_delta": kan_delta,
+            "can_participate": can_participate,
             "entry_form": entry_form,
         })
         return context
@@ -112,8 +112,8 @@ class GiveawayDetailView(DetailView):
         self.object = self.get_object()
         user = request.user
         if not can_enter_giveaway(user, self.object):
-            messages.error(request, "Du har ikke tilgang til å melde deg på denne giveawayen.")
-            logger.warning(f"Ikke-medlem eller ugyldig forsøk på påmelding: {user}")
+            messages.error(request, "You do not have access to participate in this giveaway.")
+            logger.warning(f"Non-member or invalid participation attempt: {user}")
             return redirect(self.object.get_absolute_url())
 
         form = EntryForm(request.POST, giveaway=self.object, request=request)
@@ -122,11 +122,11 @@ class GiveawayDetailView(DetailView):
             entry.user = user
             entry.giveaway = self.object
             entry.save()
-            messages.success(request, "Du er nå påmeldt!")
-            logger.info(f"Bruker {user} påmeldt giveaway {self.object} med by {entry.user_location_city}.")
+            messages.success(request, "You are now registered!")
+            logger.info(f"User {user} registered for giveaway {self.object} with city {entry.user_location_city}.")
             return redirect(self.object.get_absolute_url())
         else:
-            logger.warning(f"Påmelding feilet for bruker {user} til giveaway {self.object}: {form.errors}")
+            logger.warning(f"Registration failed for user {user} to giveaway {self.object}: {form.errors}")
             context = self.get_context_data()
             context["entry_form"] = form
             return self.render_to_response(context)
@@ -159,7 +159,7 @@ class GiveawayCreateView(LoginRequiredMixin, BusinessOnlyMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.business = self.request.user.business_account
-        logger.info(f"Giveaway opprettet for business {form.instance.business.name}")
+        logger.info(f"Giveaway created for business {form.instance.business.name}")
         return super().form_valid(form)
 
     def get_success_url(self):

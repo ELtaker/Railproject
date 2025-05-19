@@ -4,7 +4,7 @@ Permissions for giveaways app. Centralizes all access logic for entries and give
 
 def is_member(user) -> bool:
     """
-    Returnerer True hvis brukeren er autentisert, IKKE bedriftsbruker, og medlem av gruppen 'Members'.
+    Returns True if the user is authenticated, NOT a business user, and a member of the 'Members' group.
     """
     return (
         user.is_authenticated

@@ -9,14 +9,14 @@ class User(AbstractUser):
     Uses email as the primary login identifier and enforces unique, lowercase emails.
     Includes profile image and city fields.
     """
-    email = models.EmailField(_('email address'), unique=True, help_text="Unik e-postadresse for innlogging.")
+    email = models.EmailField(_('email address'), unique=True, help_text="Unique email address for login.")
     profile_image = models.ImageField(
         upload_to='profile_pics/',
         blank=True,
         null=True,
-        help_text="Profilbilde for brukeren."
+        help_text="Profile image for the user."
     )
-    city = models.CharField(max_length=100, blank=True, help_text="Brukerens bostedsby/sted.")
+    city = models.CharField(max_length=100, blank=True, help_text="User's city/location.")
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']  # username is still required for admin compatibility
@@ -28,10 +28,10 @@ class User(AbstractUser):
         from django.core.exceptions import ValidationError
         import re
         if self.city and any(char.isdigit() for char in self.city):
-            raise ValidationError("Byfeltet kan ikke inneholde tall.")
+            raise ValidationError("City field cannot contain numbers.")
         email_regex = r"[^@]+@[^@]+\.[^@]+"
         if self.email and not re.match(email_regex, self.email):
-            raise ValidationError("Ugyldig e-postadresse.")
+            raise ValidationError("Invalid email address.")
 
     def save(self, *args, **kwargs):
         if self.email:

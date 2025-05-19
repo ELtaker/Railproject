@@ -3,50 +3,50 @@ from django.conf import settings
 
 class Business(models.Model):
     """
-    Modell for bedriftsprofil på Raildrops.
-    Inneholder informasjon om bedrift, admin og tilknyttet bruker.
-    Følger PEP8, bruker meaningful comments og robust validering.
+    Model for business profile on Raildrops.
+    Contains information about the business, admin, and associated user.
+    Follows PEP8, uses meaningful comments, and robust validation.
     """
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="business_account")
-    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="admin_businesses", help_text="Brukeren som er admin for denne bedriften")
-    organization_number = models.CharField(max_length=20, unique=True, null=True, blank=True, help_text="Organisasjonsnummer må være unikt")
+    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="admin_businesses", help_text="User who is the admin for this business")
+    organization_number = models.CharField(max_length=20, unique=True, null=True, blank=True, help_text="Organization number must be unique")
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     logo = models.ImageField(upload_to="business_logos/", blank=True, null=True)
     website = models.URLField(blank=True, null=True)
     postal_code = models.CharField(max_length=10, blank=True)
     city = models.CharField(max_length=64, blank=True)
-    address = models.CharField(max_length=255, blank=True, null=True, verbose_name="Adresse", help_text="Gateadresse til bedriften")
-    phone = models.CharField(max_length=32, blank=True, null=True, verbose_name="Telefon", help_text="Kontakttelefon for bedriften")
-    contact_person = models.CharField(max_length=128, blank=True, null=True, verbose_name="Kontaktperson", help_text="Navn på hovedkontakt for bedriften")
-    social_media = models.JSONField(blank=True, null=True, verbose_name="Sosiale medier", help_text="Lenker til Facebook, Instagram, osv.")
+    address = models.CharField(max_length=255, blank=True, null=True, verbose_name="Address", help_text="Street address of the business")
+    phone = models.CharField(max_length=32, blank=True, null=True, verbose_name="Phone", help_text="Contact phone for the business")
+    contact_person = models.CharField(max_length=128, blank=True, null=True, verbose_name="Contact Person", help_text="Name of the main contact for the business")
+    social_media = models.JSONField(blank=True, null=True, verbose_name="Social Media", help_text="Links to Facebook, Instagram, etc.")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
         """
-        Returnerer navn, by og admin-e-post for bedriften.
+        Returns the name, city, and admin email for the business.
         """
         return f"{self.name} ({self.city}) - Admin: {self.admin.email if self.admin else 'Ingen'}"
 
     def clean(self):
         """
-        Ekstra validering for Business-modellen.
-        Sjekker at navn ikke er tomt og at postnummer kun inneholder tall.
+        Extra validation for the Business model.
+        Checks that the name is not empty and that the postal code contains only digits.
         """
         from django.core.exceptions import ValidationError
         if not self.name or self.name.strip() == "":
-            raise ValidationError("Bedriftsnavn kan ikke være tomt.")
+            raise ValidationError("Business name cannot be empty.")
         if self.postal_code and not self.postal_code.isdigit():
-            raise ValidationError("Postnummer kan kun inneholde tall.")
+            raise ValidationError("Postal code can only contain digits.")
 
     def save(self, *args, **kwargs):
         """
-        Lagrer Business-objektet med robust feilkontroll.
+        Saves the Business object with robust error handling.
         """
         try:
             super().save(*args, **kwargs)
         except Exception as e:
-            # Logg feilen hvis ønskelig
+            # Log the error if desired
             raise
             
     def get_display_address(self):

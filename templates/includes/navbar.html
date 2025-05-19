@@ -1,39 +1,39 @@
 {% load static %}
 
-<nav class="navbar navbar-expand-lg sticky-top bakgrunn-header" aria-label="Hovednavigasjon">
+<nav class="navbar navbar-expand-lg sticky-top bakgrunn-header" aria-label="Main navigation">
     <div class="container">
-        <a class="navbar-brand" href="{% url 'home' %}" aria-label="Raildrops hjemmeside">
+        <a class="navbar-brand" href="{% url 'home' %}" aria-label="Raildrops homepage">
             <img src="{% static 'img/features-icon-1.png' %}" alt="Raildrops Logo" width="30" height="30">
         </a>
        
-        <button class="custom-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-expanded="false" aria-label="Vis mobilmeny">
+        <button class="custom-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-expanded="false" aria-label="Show mobile menu">
             <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
         </button>
         <div class="collapse navbar-collapse d-none d-lg-flex" id="mainNavigation">
-            <ul class="navbar-nav ms-auto" role="menubar" aria-label="Hovedmeny">
-                <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">Lokasjon</a></li>
+            <ul class="navbar-nav ms-auto" role="menubar" aria-label="Main menu">
+                <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">Location</a></li>
                 <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">Features</a></li>
-                <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">Om oss</a></li>
+                <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">About Us</a></li>
                 {% if user.is_authenticated and is_member %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:dashboard' %}">Min side</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:member-profile' %}">Profil</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logg ut</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:dashboard' %}">My Page</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:member-profile' %}">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Log Out</a></li>
                 {% else %}
                     {% if user.is_authenticated and is_business %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:business-dashboard' %}">Bedriftsdashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:business-profile' %}">Rediger bedriftsprofil</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'giveaways:giveaway-create' %}">Opprett giveaway</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logg ut</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:business-dashboard' %}">Business Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:business-profile' %}">Edit Business Profile</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'giveaways:giveaway-create' %}">Create Giveaway</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Log Out</a></li>
                     {% else %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarCompanyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Bedrift</a>
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarCompanyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Business</a>
                             <ul class="dropdown-menu" aria-labelledby="navbarCompanyDropdown">
-                                <li><a class="dropdown-item" href="{% url 'businesses:business-register' %}">Registrer bedrift</a></li>
-                                <li><a class="dropdown-item" href="{% url 'businesses:business-login' %}">Logg inn for bedrift</a></li>
+                                <li><a class="dropdown-item" href="{% url 'businesses:business-register' %}">Register Business</a></li>
+                                <li><a class="dropdown-item" href="{% url 'businesses:business-login' %}">Business Login</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member-register' %}">Bli Medlem</a></li>
-                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member-login' %}">Logg inn</a></li>
+                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member-register' %}">Become Member</a></li>
+                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member-login' %}">Log In</a></li>
                     {% endif %}
                 {% endif %}
             </ul>

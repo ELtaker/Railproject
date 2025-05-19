@@ -1,5 +1,5 @@
 """
-Forretningslogikk for giveaways. Her samles all logikk for by-match, validering og vinner-trekning.
+Business logic for giveaways. This module contains all logic for city matching, validation, and winner selection.
 """
 import unicodedata
 import logging
@@ -18,14 +18,14 @@ def cities_match(user_city: str, giveaway_city: str) -> bool:
     return normalize_city(user_city) == normalize_city(giveaway_city)
 
 def validate_entry(user, giveaway, user_city: str, answer: str) -> dict:
-    """Validerer påmelding. Returnerer dict med 'success', 'error' og evt. 'normalized_city'."""
+    """Validates entry submission. Returns dict with 'success', 'error' and optionally 'normalized_city'."""
     # Always require an answer
     if not answer:
-        return {"success": False, "error": "Du må velge et svar."}
+        return {"success": False, "error": "You must select an answer."}
     
     # Always require a city location
     if not user_city:
-        return {"success": False, "error": "Din lokasjon må registreres. Tillat posisjonsdeling eller oppgi by manuelt."}
+        return {"success": False, "error": "Your location must be registered. Allow location sharing or enter city manually."}
     
     # IMPORTANT: Users must be in the same city as the business to participate
     # This is a vital function for Raildrops
@@ -33,10 +33,10 @@ def validate_entry(user, giveaway, user_city: str, answer: str) -> dict:
         # Create a more informative error message
         return {
             "success": False, 
-            "error": f"Du må være i {giveaway.business.city} for å delta i denne giveawayen. Din nåværende posisjon er registrert som {user_city}."
+            "error": f"You must be in {giveaway.business.city} to participate in this giveaway. Your current position is registered as {user_city}."
         }
     
     # Log successful location match
-    logger.info(f"Godkjent posisjon: {user_city} matcher {giveaway.business.city}")
+    logger.info(f"Approved position: {user_city} matches {giveaway.business.city}")
     
     return {"success": True, "normalized_city": normalize_city(user_city)}

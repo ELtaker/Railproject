@@ -4,27 +4,27 @@ from businesses.models import Business
 
 class Giveaway(models.Model):
     """
-    Modell for giveaways på Raildrops.
-    Inkluderer premie, bilde, verdi, beskrivelse, datoer, påmeldingsspørsmål og svaralternativer.
+    Model for giveaways on Raildrops.
+    Includes prize, image, value, description, dates, signup question and answer options.
     """
     business = models.ForeignKey(Business, on_delete=models.CASCADE, related_name="giveaways")
     title = models.CharField(max_length=255)
     description = models.TextField()
     image = models.ImageField(upload_to="giveaway_images/", blank=True, null=True)
-    prize_value = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Premieverdi", null=True, blank=True)
+    prize_value = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Prize Value", null=True, blank=True)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    signup_question = models.CharField(max_length=255, blank=True, verbose_name="Påmeldingsspørsmål")
-    signup_options = models.JSONField(blank=True, null=True, verbose_name="Svaralternativer (maks 4)")
+    signup_question = models.CharField(max_length=255, blank=True, verbose_name="Signup Question")
+    signup_options = models.JSONField(blank=True, null=True, verbose_name="Answer Options (max 4)")
 
     def __str__(self) -> str:
         return f"{self.title} ({self.business.name})"
 
 class Entry(models.Model):
     """
-    Påmelding til giveaway. Lagrer bruker, giveaway, valgt svar og brukerens by (fra geolokasjon).
+    Entry for a giveaway. Stores user, giveaway, selected answer and user's city (from geolocation).
     """
     giveaway = models.ForeignKey(Giveaway, on_delete=models.CASCADE, related_name="entries")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="entries")

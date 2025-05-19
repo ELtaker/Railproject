@@ -17,20 +17,20 @@ logger = logging.getLogger(__name__)
 
 class BusinessContextMixin:
     """
-    Mixin som gir felles funksjonalitet for business-relaterte views.
-    Inkluderer metoder for å beregne statistikk og forberede kontekst.
+    Mixin providing common functionality for business-related views.
+    Includes methods for calculating statistics and preparing context.
     """
     def get_business(self):
         """
-        Henter business-objektet for innlogget bruker.
+        Retrieves the business object for the logged-in user.
         """
         user = self.request.user
         return getattr(user, 'business_account', None)
         
     def get_business_stats(self):
         """
-        Beregner statistikk for en bedrift: giveaways, deltakere, vinnere.
-        Returnerer en dict med nøkkeltall.
+        Calculates statistics for a business: giveaways, participants, winners.
+        Returns a dict with key metrics.
         """
         business = self.get_business()
         if not business:

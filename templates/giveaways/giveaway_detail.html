@@ -38,10 +38,10 @@
     <!-- Accordion -->
     <div class="accordion">
       <details>
-        <summary>🔐 Konkurranseinfo</summary>
-        <p><strong>Arrangør:</strong> {{ business.name }}</p>
-        <p><strong>Status:</strong> {% if giveaway.is_active %}✅ Aktiv{% else %}❌ Ikke aktiv{% endif %}</p>
-        <p><strong>Opprettet:</strong> {{ giveaway.created_at|date:"d. M Y H:i" }}</p>
+        <summary>🔐 Competition Info</summary>
+        <p><strong>Organizer:</strong> {{ business.name }}</p>
+        <p><strong>Status:</strong> {% if giveaway.is_active %}✅ Active{% else %}❌ Not active{% endif %}</p>
+        <p><strong>Created:</strong> {{ giveaway.created_at|date:"d. M Y H:i" }}</p>
       </details>
     </div>
     <!-- Event Details -->
@@ -63,7 +63,7 @@
     </section>
     <!-- How to join -->
     <section class="details-box">
-      <span class="h2">Hvordan delta?</span>
+      <span class="h2">How to Participate?</span>
       {% if messages %}
         {% for message in messages %}
           <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">{{ message }}</div>
@@ -71,16 +71,16 @@
       {% endif %}
       {% if not request.user.is_authenticated %}
         <div class="alert alert-warning text-center my-4">
-          <strong>Du må være innlogget som medlem for å delta i denne giveawayen.</strong><br>
-          <a class="btn btn-primary mt-3" href="/login/?next={{ request.path }}">Logg inn eller registrer deg</a>
+          <strong>You must be logged in as a member to participate in this giveaway.</strong><br>
+          <a class="btn btn-primary mt-3" href="/login/?next={{ request.path }}">Log in or register</a>
         </div>
       {% elif is_member %}
         {% if has_joined %}
           <div class="alert alert-success text-center my-4">
-            <strong>Du er påmeldt!</strong>
+            <strong>You are registered!</strong>
           </div>
-          <button class="btn btn-success w-100" disabled>Påmeldt</button>
-        {% elif kan_delta and entry_form %}
+          <button class="btn btn-success w-100" disabled>Registered</button>
+        {% elif can_participate and entry_form %}
           <form method="post" class="mt-3" id="entry-form">
             {% csrf_token %}
             {% if giveaway.signup_question %}
@@ -88,12 +88,12 @@
             {% endif %}
             {{ entry_form.answer.errors }}
             <div class="mb-3">
-              <label for="id_user_location_city" class="form-label">Din by <span class="text-danger">*</span></label>
+              <label for="id_user_location_city" class="form-label">Your city <span class="text-danger">*</span></label>
               {{ entry_form.user_location_city }}
-              <small class="form-text text-muted">Din by må samsvare med bedriftens lokasjon ({{ business.city }}) for å delta.</small>
+              <small class="form-text text-muted">Your city must match the business location ({{ business.city }}) to participate.</small>
               <div class="mt-2 d-grid">
                 <button type="button" id="use-my-location" class="btn btn-sm btn-outline-primary">
-                  <i class="bi bi-geo-alt"></i> Bruk min nåværende posisjon
+                  <i class="bi bi-geo-alt"></i> Use my current location
                 </button>
               </div>
               <div id="location-status" class="mt-2 small d-none alert"></div>
@@ -105,7 +105,7 @@
               </div>
             {% endfor %}
             <div class="giveaway-submit text-center my-4 mx-4">
-              <button class="btn btn-primary" type="submit">Delta gratis</button>
+              <button class="btn btn-primary" type="submit">Participate for free</button>
             </div>
 
             {% if entry_form.non_field_errors %}

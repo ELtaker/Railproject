@@ -5,8 +5,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 class EntryForm(forms.ModelForm):
-    answer = forms.CharField(label="Svar", widget=forms.RadioSelect, required=True)
-    user_location_city = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Din by'}), required=True)
+    answer = forms.CharField(label="Answer", widget=forms.RadioSelect, required=True)
+    user_location_city = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Your city'}), required=True)
 
     class Meta:
         model = Entry
@@ -16,10 +16,10 @@ class EntryForm(forms.ModelForm):
         self.giveaway = kwargs.pop("giveaway", None)
         self.request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
-        # Dynamisk valg for radio fra giveaway
+        # Dynamic choices for radio buttons from giveaway
         if self.giveaway and self.giveaway.signup_options:
             self.fields["answer"].widget = forms.RadioSelect(choices=[(opt, opt) for opt in self.giveaway.signup_options])
-        # Hvis POST og feltet mangler, sett det fra profil
+        # If POST and the field is missing, set it from profile
         if self.request and self.request.method == "POST":
             data = self.data.copy()
             if not data.get("user_location_city") and hasattr(self.request.user, "city") and self.request.user.city:
@@ -33,28 +33,28 @@ class EntryForm(forms.ModelForm):
         user_location_city = cleaned_data.get("user_location_city")
         user = self.request.user if self.request else None
         giveaway = self.giveaway
-        # Valider med businesslogikk fra services.py
+        # Validate with business logic from services.py
         result = validate_entry(user, giveaway, user_location_city, answer)
         if not result["success"]:
             if "answer" in result.get("error", "").lower():
                 self.add_error("answer", result["error"])
             else:
                 self.add_error("user_location_city", result["error"])
-            logger.warning(f"Validering feilet for entry: {result['error']}")
+            logger.warning(f"Validation failed for entry: {result['error']}")
         else:
-            logger.info(f"Påmelding godkjent for by: {user_location_city}")
+            logger.info(f"Entry approved for city: {user_location_city}")
         return cleaned_data
 
 
 class GiveawayCreateForm(forms.ModelForm):
     """
-    Skjema for å opprette en ny giveaway. Inkluderer premie, bilde, verdi, beskrivelse, datoer,
-    påmeldingsspørsmål og opptil 4 svaralternativer (radio).
+    Form for creating a new giveaway. Includes prize, image, value, description, dates,
+    signup question and up to 4 answer options (radio).
     """
-    option_1 = forms.CharField(label="Svaralternativ 1", max_length=100, required=False)
-    option_2 = forms.CharField(label="Svaralternativ 2", max_length=100, required=False)
-    option_3 = forms.CharField(label="Svaralternativ 3", max_length=100, required=False)
-    option_4 = forms.CharField(label="Svaralternativ 4", max_length=100, required=False)
+    option_1 = forms.CharField(label="Answer Option 1", max_length=100, required=False)
+    option_2 = forms.CharField(label="Answer Option 2", max_length=100, required=False)
+    option_3 = forms.CharField(label="Answer Option 3", max_length=100, required=False)
+    option_4 = forms.CharField(label="Answer Option 4", max_length=100, required=False)
 
     class Meta:
         model = Giveaway
@@ -76,11 +76,11 @@ class GiveawayCreateForm(forms.ModelForm):
         ]
         options = [opt for opt in options if opt]
         if len(options) < 2:
-            self.add_error("option_1", "Du må oppgi minst 2 svaralternativer.")
+            self.add_error("option_1", "You must provide at least 2 answer options.")
         if len(options) > 4:
-            self.add_error("option_4", "Maks 4 svaralternativer er tillatt.")
+            self.add_error("option_4", "Maximum 4 answer options are allowed.")
         cleaned_data["signup_options"] = options
-        logger.info(f"Validerte svaralternativer: {options}")
+        logger.info(f"Validated answer options: {options}")
         return cleaned_data
 
     def save(self, commit=True):
