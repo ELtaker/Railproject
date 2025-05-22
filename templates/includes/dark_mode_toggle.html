@@ -1,0 +1,76 @@
+{% comment %}
+<!-- Dark Mode Toggle Component
+     A reusable component for toggling between light and dark mode
+     Stores preference in localStorage and uses Bootstrap 5 dark mode classes
+     
+     Usage: {% include "includes/dark_mode_toggle.html" %}
+-->
+{% endcomment %}
+
+<div class="dark-mode-toggle position-fixed bottom-0 end-0 m-3">
+    <button type="button" id="darkModeToggle" class="btn btn-sm rounded-circle" aria-label="Bytt mellom lys og mørk modus">
+        <i class="fa fa-moon" aria-hidden="true"></i>
+    </button>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const html = document.documentElement;
+    const icon = darkModeToggle.querySelector('i');
+    
+    // Check for saved preference
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    
+    // Apply theme on page load
+    applyTheme(currentTheme);
+    
+    // Toggle theme when button is clicked
+    darkModeToggle.addEventListener('click', function() {
+        const newTheme = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+    });
+    
+    function applyTheme(theme) {
+        html.setAttribute('data-bs-theme', theme);
+        
+        // Update button styling
+        if (theme === 'dark') {
+            darkModeToggle.classList.remove('btn-outline-dark');
+            darkModeToggle.classList.add('btn-outline-light');
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            darkModeToggle.classList.remove('btn-outline-light');
+            darkModeToggle.classList.add('btn-outline-dark');
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+    }
+});
+</script>
+{% endblock %}
+
+<style>
+.dark-mode-toggle {
+    z-index: 1050;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.dark-mode-toggle:hover {
+    opacity: 1;
+}
+
+[data-bs-theme=dark] .dark-mode-toggle .btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+[data-bs-theme=light] .dark-mode-toggle .btn {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.7);
+}
+</style>

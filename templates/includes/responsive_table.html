@@ -1,0 +1,67 @@
+{% comment %}
+<!-- 
+  Responsive Table Component
+  A reusable component for displaying responsive tables with accessibility features
+  
+  Usage: 
+  {% include "includes/responsive_table.html" with 
+     table_id="participations-table"
+     caption="Dine deltakelser"
+     headers=headers
+     rows=participations
+     empty_message="Du har ikke deltatt i noen giveaways ennå."
+     row_template="includes/participation_row.html"
+  %}
+  
+  Parameters:
+  - table_id: Unique ID for the table (required)
+  - caption: Table caption (required)
+  - headers: List of header objects with 'name' and 'label' attributes (required)
+  - rows: List of row data (required)
+  - empty_message: Message to display when no rows exist (required)
+  - row_template: Template to use for rendering each row (required)
+-->
+{% endcomment %}
+
+<div class="table-responsive" role="region" aria-label="{{ caption }}">
+    <table id="{{ table_id }}" class="table table-striped table-hover align-middle">
+        <caption class="visually-hidden">{{ caption }}</caption>
+        <thead>
+            <tr>
+                {% for header in headers %}
+                <th scope="col">{{ header.label }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% if rows %}
+                {% for row in rows %}
+                    {% include row_template with row=row %}
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="{{ headers|length }}" class="text-center py-4">
+                        <div class="alert alert-info mb-0" role="alert">
+                            <i class="fa fa-info-circle me-2" aria-hidden="true"></i>
+                            {{ empty_message }}
+                        </div>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Mobile Card View (visible on small screens only) -->
+<div class="d-md-none mt-3">
+    {% if rows %}
+        {% for row in rows %}
+            {% include row_template|slice:":-5"|add:"_card.html" with row=row %}
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            <i class="fa fa-info-circle me-2" aria-hidden="true"></i>
+            {{ empty_message }}
+        </div>
+    {% endif %}
+</div>

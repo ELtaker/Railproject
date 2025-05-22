@@ -1,0 +1,40 @@
+{% comment %}
+<!-- 
+  Stats Dashboard Component
+  A reusable component for displaying user statistics
+  Usage: {% include "includes/stats_dashboard.html" with participations=user.entries.all wins=user.winner_set.all %}
+-->
+{% endcomment %}
+
+{% load cache %}
+{% cache 1800 user_stats_dashboard user.id %}
+<div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-light">
+        <h2 class="h5 mb-0">Min Statistikk</h2>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-6">
+                <div class="p-3">
+                    <div class="display-5 fw-bold text-primary">{{ participations|length }}</div>
+                    <div class="text-muted small">Deltakelser</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="p-3">
+                    <div class="display-5 fw-bold text-success">{{ wins|length }}</div>
+                    <div class="text-muted small">Gevinster</div>
+                </div>
+            </div>
+        </div>
+        
+        {% if participations %}
+        <div class="text-center mt-2">
+            <a href="{% url 'accounts:dashboard' %}" class="btn btn-sm btn-outline-primary" aria-label="Se alle mine deltakelser">
+                <i class="fa fa-list" aria-hidden="true"></i> Se alle mine deltakelser
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endcache %}

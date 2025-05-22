@@ -13,10 +13,23 @@
 document.addEventListener('DOMContentLoaded', function() {
     
     // ------------------------------------------
-    // Dark/Light Mode Toggle
+    // Dark/Light Mode Toggle (DISABLED FOR DEVELOPMENT)
     // ------------------------------------------
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
+        // Remove dark-mode class if it exists to ensure CSS controls the styling
+        document.body.classList.remove('dark-mode');
+        
+        // Clear any saved theme preference
+        localStorage.removeItem('raildrops-theme');
+        
+        // Update icon to show light mode is active
+        updateToggleIcon(false);
+        
+        // Hide the toggle button since it's not functional
+        themeToggle.style.display = 'none';
+        
+        /* ORIGINAL CODE (COMMENTED OUT)
         // Check for saved theme preference or preferred color scheme
         const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const savedTheme = localStorage.getItem('raildrops-theme');
@@ -36,6 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Announce theme change to screen readers
             announceToScreenReader(`Byttet til ${isDarkMode ? 'mørk' : 'lys'} modus`);
         });
+        */
     }
     
     // Helper function to update icon

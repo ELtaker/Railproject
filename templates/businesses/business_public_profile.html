@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}{{ business.name }} | Bedriftsprofil | Raildrops{% endblock %}
+{% block title %}{{ business.name }} | Business Profile | Raildrops{% endblock %}
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-10 col-lg-8">
             {% if can_create_giveaway %}
             <div class="mb-3 text-end">
-                <a href="{% url 'giveaways:create' %}" class="btn btn-success"><i class="bi bi-gift"></i> Opprett giveaway</a>
+                <a href="{% url 'giveaways:create' %}" class="btn btn-success"><i class="bi bi-gift"></i> Create Giveaway</a>
             </div>
             {% endif %}
             <div class="card shadow-sm mb-4">
@@ -50,7 +50,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="alert alert-info mb-0">Ingen aktive giveaways for denne bedriften.</div>
+                        <div class="alert alert-info mb-0">No active giveaways for this business.</div>
                     {% endif %}
                 </div>
             </div>

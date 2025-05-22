@@ -1,0 +1,31 @@
+{% comment %}
+<!-- 
+  Profile Header Component
+  A reusable component for displaying user profile headers
+  Usage: {% include "includes/profile_header.html" with title="Min Profil" user=user %}
+-->
+{% endcomment %}
+
+<div class="text-center mb-4">
+    <h1 class="h2 mb-3">{{ title }}</h1>
+    
+    {% if user.profile_image %}
+    <div class="mb-3">
+        <img src="{{ user.profile_image.url }}" 
+             alt="Profilbilde for {{ user.username }}" 
+             class="rounded-circle img-thumbnail" 
+             style="width: 120px; height: 120px; object-fit: cover;"
+             aria-hidden="false">
+    </div>
+    {% endif %}
+    
+    <p class="lead text-muted">
+        Hei, {{ user.first_name|default:user.username }}!
+    </p>
+    
+    {% if user.city %}
+    <p class="badge bg-info text-dark">
+        <i class="fa fa-map-marker-alt me-1" aria-hidden="true"></i> {{ user.city }}
+    </p>
+    {% endif %}
+</div>

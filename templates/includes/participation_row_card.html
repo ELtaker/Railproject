@@ -1,0 +1,35 @@
+{% comment %}
+<!-- 
+  Participation Card Component (for mobile view)
+  Used to render each participation as a card on small screens
+  Usage: {% include "includes/participation_row_card.html" with row=participation %}
+-->
+{% endcomment %}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h3 class="card-title h5">{{ row.giveaway.title }}</h3>
+        <div class="d-flex justify-content-between">
+            <div>
+                {% if row.giveaway.is_active %}
+                    <span class="badge bg-success">Aktiv</span>
+                {% else %}
+                    <span class="badge bg-secondary">Avsluttet</span>
+                {% endif %}
+            </div>
+            <div>
+                {% if row.is_winner %}
+                    <span class="badge bg-warning text-dark">Vunnet!</span>
+                {% endif %}
+            </div>
+        </div>
+        <p class="card-text mt-2">
+            <small class="text-muted">Deltok: {{ row.entered_at|date:"d.m.Y H:i" }}</small>
+        </p>
+        <a href="{% url 'giveaways:giveaway-detail' row.giveaway.pk %}" 
+           class="btn btn-outline-primary btn-sm w-100"
+           aria-label="Se detaljer for {{ row.giveaway.title }}">
+            <i class="fa fa-info-circle" aria-hidden="true"></i> Se detaljer
+        </a>
+    </div>
+</div>

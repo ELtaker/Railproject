@@ -72,7 +72,7 @@
       {% if not request.user.is_authenticated %}
         <div class="alert alert-warning text-center my-4">
           <strong>You must be logged in as a member to participate in this giveaway.</strong><br>
-          <a class="btn btn-primary mt-3" href="/login/?next={{ request.path }}">Log in or register</a>
+          <a class="btn btn-primary mt-3" href="{% url 'accounts:member-login' %}?next={{ request.path }}">Log in or register</a>
         </div>
       {% elif is_member %}
         {% if has_joined %}
@@ -87,16 +87,12 @@
               <h4>{{ giveaway.signup_question }}</h4>
             {% endif %}
             {{ entry_form.answer.errors }}
+            {{ entry_form.user_location_city }}
             <div class="mb-3">
-              <label for="id_user_location_city" class="form-label">Your city <span class="text-danger">*</span></label>
-              {{ entry_form.user_location_city }}
-              <small class="form-text text-muted">Your city must match the business location ({{ business.city }}) to participate.</small>
-              <div class="mt-2 d-grid">
-                <button type="button" id="use-my-location" class="btn btn-sm btn-outline-primary">
-                  <i class="bi bi-geo-alt"></i> Use my current location
-                </button>
+              <div class="alert alert-info">
+                <i class="bi bi-geo-alt"></i> Your registered location: <strong>{{ request.user.city }}</strong>
+                <small class="d-block mt-1">Note: Your registered location must match the business location ({{ business.city }}) to participate.</small>
               </div>
-              <div id="location-status" class="mt-2 small d-none alert"></div>
             </div>
             {% for radio in entry_form.answer %}
               <div class="form-check mt-3 my-1 mx-4">
@@ -114,90 +110,115 @@
           </form>
           <script>
             document.addEventListener('DOMContentLoaded', function() {
-              const locationButton = document.getElementById('use-my-location');
-              const cityField = document.getElementById('id_user_location_city');
-              const statusDiv = document.getElementById('location-status');
+              // Get current user city from profile
+              const userProfileCity = "{{ request.user.city|default:'' }}";
               const businessCity = "{{ business.city }}";
               
-              // Function to update status message
-              function updateStatus(message, type) {
-                statusDiv.textContent = message;
-                statusDiv.className = `mt-2 small alert alert-${type}`;
-                statusDiv.classList.remove('d-none');
-              }
+              // Only use geolocation if user hasn't set a city in their profile
+              // or if their current city doesn't match the business city
+              const shouldUseGeolocation = !userProfileCity || 
+                                         userProfileCity.toLowerCase() !== businessCity.toLowerCase();
               
-              // Get location when button is clicked
-              if (locationButton) {
-                locationButton.addEventListener('click', function() {
-                  statusDiv.classList.remove('d-none');
-                  statusDiv.className = 'mt-2 small alert alert-info';
-                  statusDiv.textContent = 'Henter din posisjon...';
+              if (shouldUseGeolocation && navigator.geolocation) {
+                // Display a message that we're checking their location
+                const locationInfo = document.querySelector('.alert-info');
+                if (locationInfo) {
+                  locationInfo.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"></div> Checking your location...';
+                }
+                
+                navigator.geolocation.getCurrentPosition(function(position) {
+                  const lat = position.coords.latitude;
+                  const lon = position.coords.longitude;
                   
-                  if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function(position) {
-                      const lat = position.coords.latitude;
-                      const lon = position.coords.longitude;
+                  // Use OpenStreetMap Nominatim for reverse geocoding
+                  fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`)
+                    .then(response => response.json())
+                    .then(data => {
+                      // Get city from the response data
+                      let city = data.address.city || data.address.town || data.address.village || data.address.hamlet || data.address.municipality;
+                      if (!city && data.address.county) city = data.address.county;
                       
-                      // Use OpenStreetMap Nominatim for reverse geocoding
-                      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=no`)
-                        .then(response => response.json())
-                        .then(data => {
-                          let city = data.address.city || data.address.town || data.address.village || data.address.hamlet || data.address.municipality;
-                          if (!city && data.address.county) city = data.address.county;
-                          
-                          // Update city field
-                          if (cityField) {
-                            cityField.value = city;
-                            
-                            // Check if location matches business city
-                            if (city.toLowerCase() === businessCity.toLowerCase()) {
-                              updateStatus(`Din posisjon (${city}) matcher bedriftens lokasjon!`, 'success');
-                            } else {
-                              updateStatus(`Merk: Din posisjon (${city}) er ikke i samme by som bedriften (${businessCity}). Du må være i ${businessCity} for å delta.`, 'warning');
-                            }
+                      if (city) {
+                        // Check if the detected city matches profile city
+                        if (userProfileCity && userProfileCity.toLowerCase() === city.toLowerCase()) {
+                          // No need to update if they match
+                          if (locationInfo) {
+                            locationInfo.innerHTML = `<i class="bi bi-geo-alt"></i> Your registered location: <strong>${userProfileCity}</strong><small class="d-block mt-1">Note: Your registered location must match the business location (${businessCity}) to participate.</small>`;
                           }
-                        })
-                        .catch(error => {
-                          console.error('Error during reverse geocoding:', error);
-                          updateStatus('Kunne ikke bestemme byposisjon fra koordinater.', 'danger');
-                        });
-                    }, function(error) {
-                      // Handle geolocation errors
-                      let errorMsg = 'Kunne ikke hente din posisjon.';
-                      if (error.code === error.PERMISSION_DENIED) {
-                        errorMsg = 'Du må tillate posisjonsdeling i nettleseren for å bruke denne funksjonen.';
+                          return;
+                        }
+                        
+                        // Don't update if user already set their city in profile
+                        if (userProfileCity) {
+                          if (locationInfo) {
+                            locationInfo.innerHTML = `<i class="bi bi-geo-alt"></i> Your registered location: <strong>${userProfileCity}</strong><small class="d-block mt-1">Note: Your registered location must match the business location (${businessCity}) to participate.</small>`;
+                          }
+                          return;
+                        }
+                        
+                        // Update only if user hasn't set their city
+                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                        fetch('/accounts/update-location/', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                          },
+                          body: JSON.stringify({
+                            city: city
+                          })
+                        }).then(response => response.json())
+                          .then(data => {
+                            if (data.success) {
+                              // Update the UI to show the user's updated location
+                              if (locationInfo) {
+                                locationInfo.innerHTML = `<i class="bi bi-geo-alt"></i> Your location detected: <strong>${city}</strong> <span class="badge text-bg-success">Updated</span><small class="d-block mt-1">Note: Your location must match the business location (${businessCity}) to participate.</small>`;
+                              }
+                              
+                              // Check if the location matches the business city
+                              if (city.toLowerCase() === businessCity.toLowerCase()) {
+                                // Reload the page to reflect the updated status
+                                setTimeout(() => location.reload(), 1500);
+                              }
+                            }
+                          })
+                          .catch(error => console.error('Error updating location:', error));
                       }
-                      updateStatus(errorMsg, 'danger');
-                    }, {
-                      // Geolocation options
-                      enableHighAccuracy: true,
-                      timeout: 10000,
-                      maximumAge: 0
-                    });
-                  } else {
-                    updateStatus('Nettleseren din støtter ikke geolokasjon.', 'danger');
+                    })
+                    .catch(error => console.error('Error during reverse geocoding:', error));
+                }, function(error) {
+                  console.error('Geolocation error:', error);
+                  // Show the user's profile city if geolocation fails
+                  const locationInfo = document.querySelector('.alert-info');
+                  if (locationInfo && userProfileCity) {
+                    locationInfo.innerHTML = `<i class="bi bi-geo-alt"></i> Your registered location: <strong>${userProfileCity}</strong><small class="d-block mt-1">Note: Your registered location must match the business location (${businessCity}) to participate.</small>`;
                   }
+                }, {
+                  // Geolocation options
+                  enableHighAccuracy: true,
+                  timeout: 10000,
+                  maximumAge: 0
                 });
               }
             });
           </script>
         {% else %}
-          <div class="alert alert-info">Denne giveawayen er ikke aktiv for påmelding.</div>
+          <div class="alert alert-info">This giveaway is not currently active for registration.</div>
         {% endif %}
       {% elif is_business %}
         <div class="alert alert-info text-center my-4">
-          <strong>Bare medlemmer kan delta i giveaways.</strong><br>
-          <span>Du er innlogget som bedriftsbruker og kan ikke delta.</span>
+          <strong>Only members can participate in giveaways.</strong><br>
+          <span>You are logged in as a business user and cannot participate.</span>
         </div>
       {% else %}
         <div class="alert alert-warning text-center my-4">
-          <strong>Bare medlemmer kan delta i giveaways.</strong><br>
-          <span>Du må være medlem for å delta.</span>
+          <strong>Only members can participate in giveaways.</strong><br>
+          <span>You must be a member to participate.</span>
         </div>
         </div>
       {% endif %}
-      <p class="paragraph text-center mt-4">Når du deltar godkjenner du Railbird AS sine brukervilkår</p>
-      <a class="btn secondary" href="#">Railbird konkurranseregler</a>
+      <p class="paragraph text-center mt-4">By participating you accept Railbird AS's terms of service</p>
+      <a class="btn secondary" href="#">Railbird Competition Rules</a>
     </section>
 </div>
 {% endblock %}

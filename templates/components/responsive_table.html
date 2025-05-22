@@ -28,7 +28,7 @@ Usage: {% include "components/responsive_table.html" with headers=headers rows=r
       {% empty %}
         <tr>
           <td colspan="{{ headers|length }}" class="text-center text-muted py-3">
-            {{ empty_message|default:"Ingen data å vise" }}
+            {{ empty_message|default:"No data to show" }}
           </td>
         </tr>
       {% endfor %}
@@ -60,7 +60,7 @@ Usage: {% include "components/responsive_table.html" with headers=headers rows=r
     </div>
   {% empty %}
     <div class="alert alert-info">
-      {{ empty_message|default:"Ingen data å vise" }}
+      {{ empty_message|default:"No data to show" }}
     </div>
   {% endfor %}
 </div>

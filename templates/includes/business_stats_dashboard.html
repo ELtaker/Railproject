@@ -1,0 +1,43 @@
+{% comment %}
+<!-- 
+  Business Stats Dashboard Component
+  A reusable component for displaying business statistics
+  
+  Usage: 
+  {% include "includes/business_stats_dashboard.html" with 
+     total_giveaways=total_giveaways 
+     total_participants=total_participants 
+     total_winners=total_winners 
+  %}
+-->
+{% endcomment %}
+
+{% load cache %}
+{% cache 1800 business_stats_dashboard business.id %}
+<div class="row mb-4 justify-content-center">
+    <div class="col-md-4 col-lg-3 mb-2">
+        <div class="card text-center shadow-sm h-100">
+            <div class="card-body">
+                <div class="display-5 fw-bold text-primary">{{ total_giveaways|default:0 }}</div>
+                <div class="text-muted">Antall giveaways</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-2">
+        <div class="card text-center shadow-sm h-100">
+            <div class="card-body">
+                <div class="display-5 fw-bold text-success">{{ total_participants|default:0 }}</div>
+                <div class="text-muted">Antall deltakere</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-3 mb-2">
+        <div class="card text-center shadow-sm h-100">
+            <div class="card-body">
+                <div class="display-5 fw-bold text-warning">{{ total_winners|default:0 }}</div>
+                <div class="text-muted">Antall vinnere</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endcache %}

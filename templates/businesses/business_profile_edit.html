@@ -9,93 +9,136 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
                     <h2 class="card-title mb-4 text-center">Rediger Bedriftsprofil</h2>
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                <i class="fa fa-info-circle me-2" aria-hidden="true"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Lukk"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
                     <form method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
                         {% if form.non_field_errors %}
                             <div class="alert alert-danger">{{ form.non_field_errors }}</div>
                         {% endif %}
+                        <!-- Bedriftsinformasjon -->
+                        <h3 class="h5 mt-4 mb-3">Bedriftsinformasjon</h3>
                         <div class="mb-3">
-                            <label for="id_name" class="form-label">Bedriftsnavn</label>
-                            {% render_field form.name class="form-control" aria-label="Bedriftsnavn" %}
+                            <label for="id_name" class="form-label">Bedriftsnavn <span class="text-danger">*</span></label>
+                            {% render_field form.name class="form-control" aria-label="Bedriftsnavn" placeholder="Bedriftsnavn" required="required" %}
+                            <small class="form-text text-muted">Offisielt navn på bedriften din</small>
                             {% if form.name.errors %}
                                 <div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="mb-3">
-                            <label for="id_website" class="form-label">Nettside</label>
-                            {% render_field form.website class="form-control" aria-label="Nettside" %}
-                            {% if form.website.errors %}
-                                <div class="invalid-feedback d-block">{{ form.website.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
                             <label for="id_description" class="form-label">Beskrivelse</label>
-                            {% render_field form.description class="form-control" aria-label="Beskrivelse" %}
+                            {% render_field form.description class="form-control" aria-label="Beskrivelse" placeholder="Kort beskrivelse av din bedrift" rows="3" %}
+                            <small class="form-text text-muted">Kort beskrivelse som vises på din profil (maks 500 tegn)</small>
                             {% if form.description.errors %}
                                 <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
                             {% endif %}
                         </div>
-                        <div class="mb-3">
-                            <label for="id_postal_code" class="form-label">Postnummer</label>
-                            {% render_field form.postal_code class="form-control" aria-label="Postnummer" %}
-                            {% if form.postal_code.errors %}
-                                <div class="invalid-feedback d-block">{{ form.postal_code.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_city" class="form-label">By</label>
-                            {% render_field form.city class="form-control" aria-label="By" %}
-                            {% if form.city.errors %}
-                                <div class="invalid-feedback d-block">{{ form.city.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_address" class="form-label">Gateadresse</label>
-                            {% render_field form.address class="form-control" aria-label="Gateadresse" %}
-                            {% if form.address.errors %}
-                                <div class="invalid-feedback d-block">{{ form.address.errors.0 }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_phone" class="form-label">Telefon</label>
-                            {% render_field form.phone class="form-control" aria-label="Telefon" %}
-                            {% if form.phone.errors %}
-                                <div class="invalid-feedback d-block">{{ form.phone.errors.0 }}</div>
-                            {% endif %}
-                        </div>
+                        
+                        <!-- Kontaktinformasjon -->
+                        <h3 class="h5 mt-4 mb-3">Kontaktinformasjon</h3>
                         <div class="mb-3">
                             <label for="id_contact_person" class="form-label">Kontaktperson</label>
-                            {% render_field form.contact_person class="form-control" aria-label="Kontaktperson" %}
+                            {% render_field form.contact_person class="form-control" aria-label="Kontaktperson" placeholder="Navn på kontaktperson" %}
+                            <small class="form-text text-muted">Personen som er ansvarlig for bedriftens profil</small>
                             {% if form.contact_person.errors %}
                                 <div class="invalid-feedback d-block">{{ form.contact_person.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="mb-3">
-                            <label for="id_social_media" class="form-label">Sosiale medier</label>
-                            <small class="form-text text-muted">Eksempel: {"facebook": "url", "instagram": "url"}</small>
-                            {% render_field form.social_media class="form-control" aria-label="Sosiale medier" rows="2" %}
+                            <label for="id_website" class="form-label">Nettside</label>
+                            {% render_field form.website class="form-control" aria-label="Nettside" placeholder="https://www.dinbedrift.no" %}
+                            <small class="form-text text-muted">Din bedrifts nettside (husk å inkludere https://)</small>
+                            {% if form.website.errors %}
+                                <div class="invalid-feedback d-block">{{ form.website.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_phone" class="form-label">Telefon</label>
+                            {% render_field form.phone class="form-control" aria-label="Telefon" placeholder="+47 12345678" pattern="\+?[0-9\s]{8,15}" %}
+                            <small class="form-text text-muted">Telefonnummer i format: +47 12345678</small>
+                            {% if form.phone.errors %}
+                                <div class="invalid-feedback d-block">{{ form.phone.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Adresseinformasjon -->
+                        <h3 class="h5 mt-4 mb-3">Adresse</h3>
+                        <div class="mb-3">
+                            <label for="id_address" class="form-label">Gateadresse</label>
+                            {% render_field form.address class="form-control" aria-label="Gateadresse" placeholder="Gateadresse" %}
+                            <small class="form-text text-muted">Din bedrifts fysiske adresse</small>
+                            {% if form.address.errors %}
+                                <div class="invalid-feedback d-block">{{ form.address.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_postal_code" class="form-label">Postnummer <span class="text-danger">*</span></label>
+                                {% render_field form.postal_code class="form-control" aria-label="Postnummer" placeholder="1234" pattern="[0-9]{4}" required="required" %}
+                                <small class="form-text text-muted">Firesifret postnummer</small>
+                                {% if form.postal_code.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.postal_code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_city" class="form-label">Sted <span class="text-danger">*</span></label>
+                                {% render_field form.city class="form-control" aria-label="Sted" placeholder="Stedsnavn" required="required" %}
+                                <small class="form-text text-muted">Navn på sted/by</small>
+                                {% if form.city.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.city.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <!-- Sosiale Medier -->
+                        <h3 class="h5 mt-4 mb-3">Sosiale Medier</h3>
+                        <div class="mb-3">
+                            <label for="id_social_media" class="form-label">Sosiale Medier</label>
+                           
+                            <small class="form-text text-muted">Lenker til sosiale medier i JSON-format: {"plattform": "lenke"}</small>
                             {% if form.social_media.errors %}
                                 <div class="invalid-feedback d-block">{{ form.social_media.errors.0 }}</div>
                             {% endif %}
                         </div>
+                        
+                        <!-- Logo Upload -->
+                        <h3 class="h5 mt-4 mb-3">Bedriftslogo</h3>
                         <div class="mb-3">
-                            <label for="id_logo" class="form-label">Logo</label>
-                            {% if form.instance.logo %}
+                            <label for="id_logo" class="form-label">Logo (valgfri)</label>
+                            {% if business.logo %}
                                 <div class="mb-2">
-                                    <img src="{{ form.instance.logo.url }}" alt="Logo" style="max-height:80px;max-width:160px;">
+                                    <img src="{{ business.logo.url }}" alt="Gjeldende logo" class="img-thumbnail" style="max-height: 100px; object-fit: contain;">
+                                    <p class="text-muted small mt-1">Gjeldende logo</p>
                                 </div>
                             {% endif %}
                             {% render_field form.logo class="form-control" aria-label="Logo" %}
                             {% if form.logo.errors %}
                                 <div class="invalid-feedback d-block">{{ form.logo.errors.0 }}</div>
                             {% endif %}
+                            <small class="form-text text-muted">Maks. størrelse: 2MB. Formater: JPG, PNG. Anbefalt størrelse: 200x200px.</small>
                         </div>
-                        <div class="d-grid gap-2 mb-3">
-                            <button type="submit" class="btn btn-primary">Lagre endringer</button>
+                        
+                        <!-- Lagre-knapper -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-save me-2" aria-hidden="true"></i> Lagre Endringer
+                            </button>
+                            <a href="{% url 'businesses:business-dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="fa fa-arrow-left me-2" aria-hidden="true"></i> Tilbake til Dashbord
+                            </a>
                         </div>
                     </form>
                     <div class="text-center mt-3">
-                        <a href="{% url 'accounts:business-dashboard' %}" class="btn btn-link">Tilbake til dashboard</a>
+                        <a href="{% url 'businesses:business-dashboard' %}" class="btn btn-link" aria-label="Tilbake til dashbord">
+                            <i class="fa fa-home me-1" aria-hidden="true"></i> Tilbake til Dashbord
+                        </a>
                     </div>
                 </div>
             </div>

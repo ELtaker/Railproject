@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="no">
+<html lang="no" data-bs-theme="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,6 +16,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">  
 </head>
 <body>
+<!-- Skip to content link for accessibility -->
+<a href="#main-content" class="skip-to-content visually-hidden-focusable d-inline-block p-3 bg-primary text-white text-decoration-none position-absolute" aria-label="Gå direkte til innholdet">
+    Gå til hovedinnhold
+</a>
+
 <header>
     {% include "includes/navbar.html" %}
 </header>
@@ -29,7 +34,7 @@
       <div class="text-center mb-4">
         <a href="/Raildrops" class="navbar-brand text-white fs-4">Raildrops</a>
         <p class="disclaimer mt-2 small">
-          For å delta i premie-trekninger må du være over 18 år.
+          To participate in prize draws, you must be over 18 years old.
         </p>
       </div>
       <div class="row text-center text-md-start g-4 mb-4">
@@ -50,16 +55,16 @@
           </ul>
         </div>
         <div class="col-12 col-md-4">
-          <h5 class="mb-3">Juridisk</h5>
+          <h5 class="mb-3">Legal</h5>
           <ul class="list-unstyled">
-            <li><a href="/privacy-policy" class="footer-link">Personvern</a></li>
-            <li><a href="/rules" class="footer-link">Konkurranseregler</a></li>
-            <li><a href="/terms" class="footer-link">Brukervilkår</a></li>
+            <li><a href="/privacy-policy" class="footer-link">Privacy Policy</a></li>
+            <li><a href="/rules" class="footer-link">Competition Rules</a></li>
+            <li><a href="/terms" class="footer-link">Terms of Use</a></li>
           </ul>
         </div>
       </div>
       <div class="text-center">
-        <p>Følg oss på sosiale medier</p>
+        <p>Follow us on social media</p>
         <div class="social-icons d-flex justify-content-center gap-3 mt-2 mb-4">
           <a href="https://facebook.com/raildrops" aria-label="Facebook" class="text-light fs-5"><i class="fab fa-facebook-f"></i></a>
           <a href="https://twitter.com/raildrops" aria-label="Twitter" class="text-light fs-5"><i class="fab fa-twitter"></i></a>
@@ -68,12 +73,18 @@
       </div>
     </div>
     <div class="footer-bottom text-center mt-4 pt-3 border-top border-secondary">
-      <small>&copy; 2025 Raildrops – Alle rettigheter reservert.</small>
+      <small>&copy; 2025 Raildrops – All rights reserved.</small>
     </div>
 </footer>
 <!-- Footer ends -->
-<!-- Bootstrap 5 JS -->
+<!-- Dark Mode Toggle -->
+{% include "includes/dark_mode_toggle.html" %}
+
+<!-- Bootstrap 5 JavaScript Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+<!-- Extra JavaScript blocks -->
+{% block extra_js %}{% endblock %}
 
 <!-- Accessibility Enhancements -->
 {% include "includes/accessibility_enhancements.html" %}

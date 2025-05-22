@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Registrer | Raildrops{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title mb-3 text-center">Registrer deg som medlem</h2>
+                    <p class="text-center mb-4">Allerede medlem? <a href="{% url 'accounts:member-login' %}" class="link-primary">Logg inn</a></p>
+                    
+                    <form method="post" novalidate autocomplete="on">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        {% for field in form.visible_fields %}
+                            <div class="mb-3">
+                                <label for="id_{{ field.name }}" class="form-label">
+                                    {{ field.label }}
+                                    {% if field.field.required %}<span class="text-danger" aria-hidden="true">*</span>{% endif %}
+                                </label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in field.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fa fa-user-plus me-2" aria-hidden="true"></i> Registrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

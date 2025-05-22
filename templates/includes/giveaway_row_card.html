@@ -1,0 +1,53 @@
+{% comment %}
+<!-- 
+  Giveaway Card Component (for mobile view)
+  Used to render each giveaway as a card on small screens
+  Usage: {% include "includes/giveaway_row_card.html" with row=giveaway %}
+-->
+{% endcomment %}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h3 class="card-title h5">{{ row.title }}</h3>
+        <div class="d-flex justify-content-between mb-2">
+            <div>
+                {% if row.is_active %}
+                    <span class="badge bg-success">Aktiv</span>
+                {% else %}
+                    <span class="badge bg-secondary">Avsluttet</span>
+                {% endif %}
+            </div>
+            <div>
+                {% if row.winner %}
+                    <span class="badge bg-warning text-dark">Vinner trukket</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <small class="text-muted">Opprettet: {{ row.created_at|date:"d.m.Y" }}</small>
+            <small class="text-muted">{{ row.entries.count }} deltakere</small>
+        </div>
+        <div class="d-flex gap-2 mt-3">
+            <a href="{% url 'giveaways:giveaway-detail' row.pk %}" 
+               class="btn btn-sm btn-outline-primary flex-grow-1"
+               aria-label="Se detaljer for {{ row.title }}">
+                <i class="fa fa-info-circle" aria-hidden="true"></i> Detaljer
+            </a>
+            {% if row.is_active %}
+            <a href="{% url 'giveaways:giveaway-edit' row.pk %}" 
+               class="btn btn-sm btn-outline-secondary flex-grow-1"
+               aria-label="Rediger {{ row.title }}">
+                <i class="fa fa-edit" aria-hidden="true"></i> Rediger
+            </a>
+            {% else %}
+                {% if not row.winner %}
+                <a href="{% url 'giveaways:draw' row.pk %}" 
+                   class="btn btn-sm btn-outline-warning flex-grow-1"
+                   aria-label="Trekk vinner for {{ row.title }}">
+                    <i class="fa fa-trophy" aria-hidden="true"></i> Trekk vinner
+                </a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>

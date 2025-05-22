@@ -3,7 +3,9 @@ from django.contrib import messages
 from django.contrib.auth import login, logout, get_user_model
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy, reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
+from django.views.decorators.http import require_POST
+import json
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
@@ -21,31 +23,7 @@ logger = logging.getLogger(__name__)
 
 from django.views.generic.edit import FormView
 
-class BusinessDashboardView(LoginRequiredMixin, BusinessOnlyMixin, TemplateView):
-    template_name = "businesses/business_dashboard.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        business = self.request.user.business_account
-        context["business"] = business
-        context["giveaways_active"] = Giveaway.objects.filter(business=business, is_active=True)
-        context["giveaways_ended"] = Giveaway.objects.filter(business=business, is_active=False)
-        return context
-
-
-class BusinessLoginView(FormView):
-    template_name = "accounts/business_login.html"
-    form_class = MemberLoginForm
-
-    def form_valid(self, form):
-        user = form.cleaned_data.get('user')
-        if not hasattr(user, 'business_account') or not user.business_account:
-            messages.error(self.request, "Denne brukeren har ikke tilknyttet bedrift. Bruk medlemsinnlogging om du ikke er bedriftsbruker.")
-            return self.form_invalid(form)
-        login(self.request, user)
-        messages.success(self.request, "Velkommen, bedriftsbruker!")
-        # Du kan tilpasse redirect til bedriftsdashboard eller profil
-        return HttpResponseRedirect(reverse('accounts:business_dashboard'))
+# Views are organized following Django best practices with CBVs for complex views
 
 class HomeTestPageView(TemplateView):
     """
@@ -64,8 +42,11 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     """
     Viser medlemsprofil for innloggede brukere.
     Krever innlogging.
+    
+    This view displays the member profile for logged-in users.
+    Requires authentication and uses the member_profile.html template.
     """
-    template_name = "accounts/profile.html"
+    template_name = "accounts/member_profile.html"
     login_url = "accounts:member-login"
 
     def get_context_data(self, **kwargs):
@@ -83,7 +64,7 @@ class ProfileEditView(LoginRequiredMixin, UpdateView):
     """
     model = User
     form_class = UserProfileForm
-    template_name = "accounts/profile_edit.html"
+    template_name = "accounts/member_profile_edit.html"
     success_url = reverse_lazy("accounts:member-profile")
     login_url = "accounts:member-login"
 
@@ -105,7 +86,70 @@ class BusinessProfileEditView(LoginRequiredMixin, BusinessOnlyMixin, UpdateView)
     form_class = BusinessProfileForm
     template_name = "businesses/business_profile_edit.html"
     success_url = reverse_lazy("accounts:business-dashboard")
-    login_url = "accounts:member-login"
+    login_url = "accounts:business-login"
+    
+
+@require_POST
+@login_required
+def update_location(request):
+    """
+    AJAX endpoint to update a user's location based on browser geolocation.
+    
+    This function handles the update of user location from geolocation API requests.  
+    It expects a JSON payload with a 'city' field and returns a JSON response.
+    
+    Args:
+        request: HttpRequest object with JSON body
+    Returns:
+        JsonResponse with success/error information
+    """
+    from django.utils.html import strip_tags
+    from django.views.decorators.csrf import csrf_protect
+    
+    try:
+        # Parse the JSON data from the request body
+        data = json.loads(request.body)
+        city = data.get('city')
+        
+        # Validate input
+        if not city:
+            return JsonResponse({'success': False, 'error': 'By er påkrevd'}, status=400)
+        
+        if len(city) > 100:
+            return JsonResponse({'success': False, 'error': 'Bynavn er for langt'}, status=400)
+            
+        # Sanitize input to prevent XSS
+        city = strip_tags(city)
+        
+        # Validate city format (no numbers allowed)
+        import re
+        if re.search(r'[0-9]', city):
+            return JsonResponse({'success': False, 'error': 'Bynavn kan ikke inneholde tall'}, status=400)
+        
+        # Update the user's city in their profile
+        user = request.user
+        user.city = city
+        user.save()
+        
+        # Also update MemberProfile if it exists
+        if hasattr(user, 'member_profile'):
+            profile = user.member_profile
+            profile.city = city
+            profile.save()
+        
+        logger.info(f"User location updated via geolocation: {user.username} -> {city}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Lokasjon oppdatert',
+            'city': city
+        })
+    except json.JSONDecodeError:
+        logger.warning(f"Invalid JSON in update_location from user {request.user.username}")
+        return JsonResponse({'success': False, 'error': 'Ugyldig JSON-format'}, status=400)
+    except Exception as e:
+        logger.error(f"Error updating user location for {request.user.username}: {str(e)}")
+        return JsonResponse({'success': False, 'error': 'Server feil'}, status=500)
 
     def get_object(self, queryset=None):
         return self.request.user.business_account
@@ -151,22 +195,33 @@ class UserRegisterView(FormView):
     View for registrering av nye medlemmer på Raildrops.
     Viser registreringsskjema, validerer input og oppretter ny bruker.
     """
-    template_name = "accounts/register.html"
+    template_name = "accounts/member_register.html"
     form_class = UserRegistrationForm
     success_url = reverse_lazy('accounts:dashboard')
 
     def form_valid(self, form):
         from django.contrib.auth.models import Group
-        user = form.save()
-        # Opprett MemberProfile
+        # Save user without committing to get the user instance
+        user = form.save(commit=False)
+        # Save the city from the form to the User model
+        user.city = form.cleaned_data.get('city', '')
+        # Now save the user with the city field
+        user.save()
+        
+        # Opprett MemberProfile with city
         from .models import MemberProfile
-        MemberProfile.objects.create(user=user)
+        MemberProfile.objects.create(
+            user=user,
+            city=form.cleaned_data.get('city', '')
+        )
+        
         # Legg bruker i Medlem-gruppen
         medlem_group, _ = Group.objects.get_or_create(name="Medlem")
         user.groups.add(medlem_group)
+        
         # Spesifiser backend for vanlige brukere
         login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
-        logger.info(f"Bruker registrert: {user.username} ({user.email})")
+        logger.info(f"Bruker registrert: {user.username} ({user.email}) fra {user.city}")
         messages.success(self.request, "Bruker registrert og innlogget!")
         return redirect('accounts:dashboard')
 
@@ -201,28 +256,18 @@ def member_login_view(request):
 
 
 def custom_logout_view(request):
+    """
+    Håndterer utlogging for alle brukertyper.
+    Logger ut brukeren og viser en suksessmelding.
+    
+    Args:
+        request: HttpRequest object
+    Returns:
+        HttpResponseRedirect til hjemmesiden
+    """
     logout(request)
     messages.success(request, "Du er nå logget ut.")
     return redirect('home')
-
-# BusinessProfileEditView er fjernet. Bruk bedriftsprofil-redigering fra businesses/views.py.
-    model = Business
-    form_class = BusinessProfileForm
-    template_name = "businesses/business_profile_edit.html"
-    success_url = "/accounts/dashboard/"
-    login_url = "login"
-
-    def get_object(self, queryset=None):
-        # Finn Business-profil for innlogget bruker
-        try:
-            return Business.objects.get(user=self.request.user)
-        except Business.DoesNotExist:
-            from django.http import Http404
-            raise Http404("Ingen bedriftsprofil funnet for denne brukeren.")
-
-    def form_valid(self, form):
-        messages.success(self.request, "Bedriftsprofilen er oppdatert!")
-        return super().form_valid(form)
 
 @login_required
 def dashboard_view(request):
@@ -230,45 +275,47 @@ def dashboard_view(request):
     Viser dashboard for innlogget bruker. 
     For vanlige medlemmer vises deltakelser i giveaways og gevinster.
     For bedriftsbrukere vises bedriftsinfo og giveaways-oversikt.
+    
+    Args:
+        request: HttpRequest object
+    Returns:
+        HttpResponse with dashboard content based on user role
     """
     user = request.user
     context = {"user": user}
 
     # Sjekk om brukeren er en bedriftsbruker 
     if hasattr(user, 'business_account') and user.business_account:
-        # Håndterer bedriftsbruker
-        business = user.business_account
-        try:
-            giveaways = Giveaway.objects.filter(business=business)
-            giveaways_active = giveaways.filter(is_active=True)
-            giveaways_ended = giveaways.filter(is_active=False)
-            giveaways_with_winner = giveaways.filter(winner__isnull=False)
-            giveaways_log = giveaways.order_by('-created_at')[:10]
-            
-            # Omdirigerer til bedrifts-dashboard
-            return HttpResponseRedirect(reverse('accounts:business_dashboard'))
-        except Exception as e:
-            logger.error(f"Feil ved lasting av bedriftsdashboard: {e}")
+        # Omdirigerer til bedrifts-dashboard direkte (handled by businesses app)
+        return HttpResponseRedirect(reverse('businesses:business-dashboard'))
     else:
         # Håndterer vanlig medlem
         try:
-            # Henter alle deltakelser for brukeren
-            participations = Entry.objects.filter(user=user).select_related('giveaway').order_by('-created_at')
+            # Use select_related to reduce database queries
+            participations = Entry.objects.filter(user=user)\
+                .select_related('giveaway', 'giveaway__business')\
+                .order_by('-created_at')
             
-            # Teller antall gevinster
-            wins = Winner.objects.filter(user=user).count()
+            # Get nearby giveaways if user has location
+            nearby_giveaways = []
+            if user.city:
+                nearby_giveaways = Giveaway.objects.filter(
+                    business__city=user.city,
+                    is_active=True
+                ).select_related('business')[:5]
             
-            # Henter nylige giveaways for medlemmet
-            recent_entries = participations[:5]
+            # Teller antall gevinster - bruk select_related for å redusere spørringer
+            wins = Winner.objects.filter(user=user).select_related('giveaway').count()
             
             context.update({
                 'participations': participations,
-                'recent_entries': recent_entries,
+                'recent_entries': participations[:5],
                 'wins': wins,
+                'nearby_giveaways': nearby_giveaways,
             })
         except Exception as e:
-            logger.error(f"Feil ved lasting av medlems-dashboard: {e}")
+            logger.error(f"Error loading member dashboard: {str(e)}")
             messages.error(request, "Det oppsto en feil ved lasting av dashboardet. Vennligst prøv igjen senere.")
     
-    return render(request, 'accounts/dashboard.html', context)
+    return render(request, 'accounts/member_dashboard.html', context)
 

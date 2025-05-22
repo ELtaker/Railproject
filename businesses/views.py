@@ -80,7 +80,11 @@ class BusinessPublicProfileView(DetailView):
         return context
 
 class BusinessRegisterView(FormView):
-    template_name = "accounts/business_register.html"
+    """
+    View for å registrere nye bedriftsbrukere.
+    Oppretter både bruker og tilknyttet bedriftsprofil.
+    """
+    template_name = "businesses/business_register.html"
     form_class = BusinessRegistrationForm
     success_url = reverse_lazy("businesses:business-login")
 
@@ -106,7 +110,7 @@ class BusinessRegisterView(FormView):
         return super().form_valid(form)
 
 class BusinessLoginView(FormView):
-    template_name = "accounts/business_login.html"
+    template_name = "businesses/business_login.html"
     form_class = MemberLoginForm
 
     def form_valid(self, form):
@@ -115,8 +119,8 @@ class BusinessLoginView(FormView):
             messages.error(self.request, "Denne brukeren har ikke tilknyttet bedrift. Bruk medlemsinnlogging om du ikke er bedriftsbruker.")
             return self.form_invalid(form)
         login(self.request, user)
-        messages.success(self.request, "Velkommen, bedriftsbruker!")
-        return HttpResponseRedirect(reverse('accounts:business-dashboard'))
+        messages.success(self.request, "Welcome, business user!")
+        return HttpResponseRedirect(reverse('businesses:business-dashboard'))
 
 class BusinessProfileView(LoginRequiredMixin, UpdateView):
     """
@@ -161,9 +165,9 @@ class BusinessProfileEditView(LoginRequiredMixin, BusinessContextMixin, UpdateVi
     def dispatch(self, request, *args, **kwargs):
         user = request.user
         if not hasattr(user, "business_account"):
-            logger.warning(f"Bruker {user.username} forsøkte å redigere bedriftsprofil uten å være bedriftsbruker.")
-            messages.error(request, "Du har ikke tilgang til å redigere bedriftsprofil.")
-            return redirect("accounts:dashboard")
+            logger.warning(f"User {user.username} attempted to edit business profile without being a business user.")
+            messages.error(request, "You do not have access to edit business profile.")
+            return redirect("accounts:member-profile")
         return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):

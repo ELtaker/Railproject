@@ -1,0 +1,33 @@
+{% comment %}
+<!-- 
+  Participation Row Component
+  Used to render each row in the participations table
+  Usage: {% include "includes/participation_row.html" with row=participation %}
+-->
+{% endcomment %}
+
+<tr>
+    <th scope="row">{{ row.giveaway.title }}</th>
+    <td>
+        {% if row.giveaway.is_active %}
+            <span class="badge bg-success" role="status">Aktiv</span>
+        {% else %}
+            <span class="badge bg-secondary" role="status">Avsluttet</span>
+        {% endif %}
+    </td>
+    <td>{{ row.entered_at|date:"d.m.Y H:i" }}</td>
+    <td>
+        {% if row.is_winner %}
+            <span class="badge bg-warning text-dark" role="status">Vunnet!</span>
+        {% else %}
+            <span aria-label="Ikke vunnet">-</span>
+        {% endif %}
+    </td>
+    <td>
+        <a href="{% url 'giveaways:giveaway-detail' row.giveaway.pk %}" 
+           class="btn btn-outline-primary btn-sm"
+           aria-label="Se detaljer for {{ row.giveaway.title }}">
+            <i class="fa fa-info-circle" aria-hidden="true"></i> Detaljer
+        </a>
+    </td>
+</tr>

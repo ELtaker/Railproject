@@ -2,6 +2,10 @@
 
 Raildrops is a modular Django 5.2 web application for managing location-based giveaways, supporting both individual members and business users. Built with modern web practices, the platform allows businesses to create giveaways that members can participate in based on their geographical location. The project emphasizes clear separation of concerns, robust role-based permissions, accessibility, and a responsive user experience.
 
+[![Built with Django](https://img.shields.io/badge/Built%20with-Django%205.2-092E20?style=flat-square&logo=django)](https://www.djangoproject.com/)
+[![Bootstrap 5](https://img.shields.io/badge/Frontend-Bootstrap%205-7952B3?style=flat-square&logo=bootstrap)](https://getbootstrap.com/)
+[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+
 ## Features
 
 ### User Management
@@ -21,6 +25,10 @@ Raildrops is a modular Django 5.2 web application for managing location-based gi
 - **Question & Answer Validation:** Customizable questions with answer validation
 - **Geolocation Integration:** Browser-based geolocation with OpenStreetMap reverse geocoding
 - **Winner Selection:** Automated winner selection based on correct answers
+- **Business Giveaway Dashboard:** Enhanced interface for businesses to manage their giveaways
+- **Status-Based Filtering:** Filter giveaways by active, upcoming, or ended status
+- **Advanced Sorting Options:** Sort giveaways by various criteria including participation rate
+- **Participation Status Messages:** User-friendly feedback on participation eligibility
 
 ### User Experience
 - **Responsive Design:** Bootstrap 5-based interface that works on all devices
@@ -33,6 +41,10 @@ Raildrops is a modular Django 5.2 web application for managing location-based gi
 - **RESTful URLs:** Consistent URL structure following kebab-case conventions
 - **Form Validation:** Client and server-side validation with helpful error messages
 - **Test Coverage:** Comprehensive unit and integration tests
+- **Database Optimization:** Proper indexing and query optimization for performance
+- **Caching Strategies:** Efficient caching of expensive database queries
+- **ARIA Enhancements:** Improved accessibility with proper ARIA attributes
+- **Localization:** Norwegian language support for all user-facing text
 
 ## Technology Stack
 
@@ -312,7 +324,103 @@ def cities_match(user_city: str, business_city: str) -> bool:
 - Check for custom CSS that might override Bootstrap
 - Ensure correct class usage (e.g., .btn-primary vs .btn.primary)
 
-### Debugging Tips
+## Recent Updates (May 2025)
+
+### Version 2.2.0 (2025-05-22)
+
+1. **Giveaway Module Enhancements**
+   - Optimized database queries with proper indexing and select_related
+   - Added business-specific giveaway dashboard with filtering and sorting
+   - Implemented detailed participation status feedback for users
+   - Added giveaway editing functionality for business owners
+   - Enhanced models with better validation and utility methods
+   - Improved error handling and security with proper role-based access
+
+2. **Business Profiles**
+   - Added display_address method to format address components
+   - Enhanced social media handling with get_social_links method
+   - Added contact person and extended business information
+   - Improved validation with proper client-side patterns
+
+3. **User Experience**
+   - Added ARIA attributes for improved accessibility
+   - Implemented Norwegian language support for all user-facing content
+   - Enhanced form validation with helpful error messages
+   - Added business statistics and recent activities dashboard
+
+### Version 2.1.0 (2025-03-15)
+
+1. **Business Dashboards**
+   - Added visual data representations for business insights
+   - Integrated new statistics for tracking giveaway performance
+   - Added export functionality for participation data
+
+2. **User Interface**
+   - Implemented dark/light mode toggle
+   - Enhanced mobile responsiveness
+   - Added toast notifications for important events
+
+3. **Profile Management**
+   - Added robust password change functionality with proper feedback
+   - Fixed city storage during member registration
+   - Ensured city location is properly stored in both User and MemberProfile models
+
+4. **Template Organization**
+   - Standardized template naming conventions across the project
+   - Removed duplicate/unused templates
+   - Improved structure following Django best practices
+
+### New Dependencies
+
+Updated `requirements.txt` with the following packages:
+- `django-bootstrap5` for improved Bootstrap 5 integration
+- `geopy` for enhanced location-based features
+- `django-environ` for better environment variable management
+- Various optimization and testing libraries
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+#### Problem: Location Detection Issues
+**Symptoms:**
+- Location doesn't match city set in profile
+- "Your location detected: [Different City]" message appears
+
+**Solutions:**
+- Edit profile and set your city manually
+- Location updates now respect manually set city values
+- Clear browser cache and location permissions if problems persist
+
+#### Problem: Giveaway Participations Not Showing on Dashboard
+**Symptoms:**
+- Joined giveaways don't appear in member dashboard
+- Error message about `created_at` field
+
+**Solution:**
+- Issue fixed in latest update (corrected field reference to `entered_at`)
+- If problem persists, try logging out and back in
+
+#### Problem: Password Change Not Working
+**Symptoms:**
+- Error message when trying to change password
+- URL not found errors
+
+**Solution:**
+- Use the profile edit page to access password change functionality
+- Password change URLs have been standardized to `accounts:password_change`
+
+#### Problem: Bootstrap Styles Not Applied Correctly
+**Symptoms:**
+- Missing styling on buttons or layout issues
+- Form elements not displaying properly
+
+**Solutions:**
+- Verify proper Bootstrap 5 CSS inclusion in base.html
+- Check for custom CSS that might override Bootstrap
+- Ensure correct class usage (e.g., `.btn-primary` vs `.btn.primary`)
+
+### Debugging Tools
 
 1. **Django Debug Toolbar:**
    - Install django-debug-toolbar for development
@@ -409,6 +517,24 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Participation:** Tracks member entries, selected answers, and timestamps. Ensures unique participation per giveaway.
 
 ## Giveaway Participation & Winner Selection
+
+The giveaway system has been optimized for performance and user experience:
+
+1. **Optimized Models**
+   - Database indexes on frequently queried fields
+   - Utility methods for checking giveaway status (is_expired, is_upcoming, is_currently_active)
+   - Enhanced validation for data integrity
+
+2. **Efficient Queries**
+   - select_related for related objects to reduce database queries
+   - Aggregation for statistics instead of multiple queries
+   - Caching expensive operations for better performance
+
+3. **Enhanced Views**
+   - BusinessGiveawayListView for business-specific dashboard
+   - GiveawayEditView for editing existing giveaways
+   - Improved GiveawayDetailView with better participation status feedback
+   - GiveawayListView with advanced filtering and accessibility
 
 - Members can join active giveaways by answering a question.
 - Only one entry per member per giveaway is allowed.

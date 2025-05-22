@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 class EntryForm(forms.ModelForm):
     answer = forms.CharField(label="Answer", widget=forms.RadioSelect, required=True)
-    user_location_city = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Your city'}), required=True)
+    user_location_city = forms.CharField(widget=forms.HiddenInput(), required=True)
 
     class Meta:
         model = Entry
@@ -19,12 +19,19 @@ class EntryForm(forms.ModelForm):
         # Dynamic choices for radio buttons from giveaway
         if self.giveaway and self.giveaway.signup_options:
             self.fields["answer"].widget = forms.RadioSelect(choices=[(opt, opt) for opt in self.giveaway.signup_options])
-        # If POST and the field is missing, set it from profile
-        if self.request and self.request.method == "POST":
-            data = self.data.copy()
-            if not data.get("user_location_city") and hasattr(self.request.user, "city") and self.request.user.city:
-                data["user_location_city"] = self.request.user.city
-                self.data = data
+            
+        # Always set the location from the user profile
+        if self.request and self.request.user.is_authenticated:
+            # Pre-fill the form data with the user's stored city
+            if hasattr(self.request.user, "city") and self.request.user.city:
+                # For initial data (GET request)
+                self.initial["user_location_city"] = self.request.user.city
+                
+                # For POST data
+                if self.request.method == "POST":
+                    data = self.data.copy()
+                    data["user_location_city"] = self.request.user.city
+                    self.data = data
 
     def clean(self):
         from .services import validate_entry
@@ -55,6 +62,10 @@ class GiveawayCreateForm(forms.ModelForm):
     option_2 = forms.CharField(label="Answer Option 2", max_length=100, required=False)
     option_3 = forms.CharField(label="Answer Option 3", max_length=100, required=False)
     option_4 = forms.CharField(label="Answer Option 4", max_length=100, required=False)
+    
+    def __init__(self, *args, **kwargs):
+        self.business = kwargs.pop('business', None)
+        super().__init__(*args, **kwargs)
 
     class Meta:
         model = Giveaway

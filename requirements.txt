@@ -1,10 +1,69 @@
+# Core dependencies
 asgiref==3.8.1
 Django==5.2
 python-dotenv==1.1.0
+sqlparse==0.5.3
+tzdata==2025.2
+bleach==6.2.0  # HTML sanitization
+
+# Image processing
+Pillow==11.1.0
+
+# Authentication & Security
+django-allauth==0.61.1
+django-otp==1.2.2
+django-recaptcha==4.0.0
+
+# Database
+psycopg2-binary==2.9.9  # For PostgreSQL
+
+# Optimization
+django-debug-toolbar==4.3.0
+django-extensions==3.2.3
+django-cacheops==7.0.2
+
+# Forms & Frontend
+django-bootstrap5==24.1
+django-crispy-forms==2.1
+crispy-bootstrap5==2023.10
+django-widget-tweaks==1.5.0  # Form field rendering enhancements
+
+# Location & Maps
+geopy==2.4.1
+
+# Background tasks
+celery==5.3.6  # Async task processing
+redis==5.0.1  # Redis broker for Celery
+django-celery-results==2.5.1  # Store task results in Django ORM
+django-celery-beat==2.5.0  # Scheduled tasks
+
+# Performance & Optimization
+django-silk==5.1.0  # Request profiling
+django-storages==1.14.2  # File storage abstraction
+
+# Localization & Internationalization
+django-rosetta==0.10.0  # Translation interface
+
+# Testing & Quality Assurance
+pytest==8.0.0
+pytest-django==5.0.0
+factory-boy==3.3.0  # Test data generation
+fake==0.8  # Test data generation
+
+# Utilities
+django-environ==0.11.2
+django-filter==24.1
+django-lifecycle==1.1.1
+django-model-utils==4.3.1
+
+# API
+django-rest-framework==0.1.0
+drf-yasg==1.21.7
+
+# Development tools
 flake8==7.2.0
 mypy==1.15.0
 pytest==8.3.5
-pillow==11.1.0
-python-dotenv==1.1.0
-sqlparse==0.5.3
-tzdata==2025.2
+pytest-django==4.8.0
+factory-boy==3.3.0
+coverage==7.4.3

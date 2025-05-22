@@ -99,7 +99,7 @@
     {% endif %}
 </div>
 <script>
-// "Min lokasjon"-knapp: Forsøk å hente brukerens geolokasjon og autofyll postnummer/sted
+// "My location" button: Try to retrieve the user's geolocation and autofill postal code/location
 const myLocationBtn = document.getElementById('my-location-btn');
 const locationError = document.getElementById('location-error');
 if(myLocationBtn) {
@@ -128,7 +128,7 @@ if(myLocationBtn) {
                         locationError.classList.remove('d-none');
                     });
             }, function() {
-                locationError.textContent = 'Du må tillate posisjon for å bruke denne funksjonen.';
+                locationError.textContent = 'You must allow location sharing to use this feature.';
                 locationError.classList.remove('d-none');
             });
         } else {

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Min Profil | Raildrops{% endblock %}
+{% block content %}
+<main class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            {% include "includes/profile_header.html" with title="Min Profil" user=user %}
+            
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    {% comment %}
+                    <!-- Load profile content from a cached template fragment -->
+                    {% endcomment %}
+                    {% load cache %}
+                    {% cache 3600 user_profile_details user.id %}
+                    <dl class="row mb-4">
+                        <dt class="col-sm-4">Brukernavn</dt>
+                        <dd class="col-sm-8">{{ user.username }}</dd>
+                        <dt class="col-sm-4">E-post</dt>
+                        <dd class="col-sm-8">{{ user.email }}</dd>
+                        <dt class="col-sm-4">By</dt>
+                        <dd class="col-sm-8">{{ user.city|default:"Ikke angitt" }}</dd>
+                        <dt class="col-sm-4">Medlemskap</dt>
+                        <dd class="col-sm-8">
+                            {% if user.date_joined %}
+                                Medlem siden {{ user.date_joined|date:"d.m.Y" }}
+                            {% else %}
+                                Ikke tilgjengelig
+                            {% endif %}
+                        </dd>
+                    </dl>
+                    {% endcache %}
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'accounts:member-profile-edit' %}" class="btn btn-primary" aria-label="Rediger profil">
+                            <i class="fa fa-edit" aria-hidden="true"></i> Rediger Profil
+                        </a>
+                        <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-secondary" aria-label="Endre passord">
+                            <i class="fa fa-key" aria-hidden="true"></i> Endre Passord
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            {% include "includes/stats_dashboard.html" with participations=user.entries.all wins=user.winner_set.all %}
+        </div>
+    </div>
+</main>
+{% endblock %}

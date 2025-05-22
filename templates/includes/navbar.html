@@ -1,9 +1,16 @@
 {% load static %}
 
-<nav class="navbar navbar-expand-lg sticky-top bakgrunn-header" aria-label="Main navigation">
+<nav class="navbar navbar-expand-lg sticky-top bakgrunn-header{% if user.is_authenticated %} {% if is_member %} member-navbar{% elif is_business %} business-navbar{% endif %}{% endif %}" aria-label="Main navigation">
     <div class="container">
         <a class="navbar-brand" href="{% url 'home' %}" aria-label="Raildrops homepage">
             <img src="{% static 'img/features-icon-1.png' %}" alt="Raildrops Logo" width="30" height="30">
+            {% if user.is_authenticated %}
+                {% if is_member %}
+                    <span class="ms-2 d-none d-md-inline text-light user-type-indicator">Member</span>
+                {% elif is_business %}
+                    <span class="ms-2 d-none d-md-inline text-light user-type-indicator">Business</span>
+                {% endif %}
+            {% endif %}
         </a>
        
         <button class="custom-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-expanded="false" aria-label="Show mobile menu">
@@ -11,61 +18,171 @@
         </button>
         <div class="collapse navbar-collapse d-none d-lg-flex" id="mainNavigation">
             <ul class="navbar-nav ms-auto" role="menubar" aria-label="Main menu">
-                <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">Location</a></li>
-                <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">Features</a></li>
-                <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">About Us</a></li>
-                {% if user.is_authenticated and is_member %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:dashboard' %}">My Page</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:member-profile' %}">Profile</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Log Out</a></li>
-                {% else %}
-                    {% if user.is_authenticated and is_business %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:business-dashboard' %}">Business Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:business-profile' %}">Edit Business Profile</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'giveaways:giveaway-create' %}">Create Giveaway</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Log Out</a></li>
-                    {% else %}
+                {% if not user.is_authenticated or not is_business %}
+                    <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">Location</a></li>
+                    <li class="nav-item" role="none"><a class="nav-link" href="#features" role="menuitem">Features</a></li>
+                    <li class="nav-item dropdown" role="none">
+                        <a class="nav-link dropdown-toggle" href="#" id="businessDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" role="menuitem">Business</a>
+                        <ul class="dropdown-menu" aria-labelledby="businessDropdown">
+                            <li><a class="dropdown-item" href="{% url 'businesses:business-register' %}">Register Business</a></li>
+                            <li><a class="dropdown-item" href="{% url 'businesses:business-login' %}">Business Login</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item" role="none"><a class="nav-link" href="#about" role="menuitem">About Us</a></li>
+                    <li class="nav-item" role="none"><a class="nav-link btn-nav main" href="{% url 'accounts:member-register' %}" role="menuitem">Register</a></li>
+                    <li class="nav-item" role="none"><a class="nav-link btn-login" href="{% url 'accounts:member-login' %}" role="menuitem">Login</a></li>
+                {% endif %}
+                
+                {% if user.is_authenticated %}
+                    {% if is_member %}
+                        <!-- Member Navigation -->
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:dashboard' %}"><i class="fa fa-home me-1" aria-hidden="true"></i>Dashboard</a></li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarCompanyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Business</a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarCompanyDropdown">
-                                <li><a class="dropdown-item" href="{% url 'businesses:business-register' %}">Register Business</a></li>
-                                <li><a class="dropdown-item" href="{% url 'businesses:business-login' %}">Business Login</a></li>
+                            <a class="nav-link dropdown-toggle" href="#" id="memberProfileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-user-circle me-1" aria-hidden="true"></i>Profile
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="memberProfileDropdown">
+                                <li><a class="dropdown-item" href="{% url 'accounts:member-profile' %}">View Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:member-profile-edit' %}">Edit Profile</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member-register' %}">Become Member</a></li>
-                        <li class="nav-item"><a class="nav-link btn-nav.main" href="{% url 'accounts:member-login' %}">Log In</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}"><i class="fa fa-sign-out-alt me-1" aria-hidden="true"></i>Log Out</a></li>
+                    {% elif is_business %}
+                        <!-- Business Navigation -->
+                        <li class="nav-item"><a class="nav-link" href="{% url 'businesses:business-dashboard' %}"><i class="fa fa-chart-line me-1" aria-hidden="true"></i>Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'giveaways:giveaway-create' %}"><i class="fa fa-plus-circle me-1" aria-hidden="true"></i>Create Giveaway</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="businessProfileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-store me-1" aria-hidden="true"></i>Business Profile
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="businessProfileDropdown">
+                                <li><a class="dropdown-item" href="{% url 'businesses:business-profile' %}">View Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'businesses:business-profile-edit' %}">Edit Profile</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}"><i class="fa fa-sign-out-alt me-1" aria-hidden="true"></i>Log Out</a></li>
                     {% endif %}
+                {% else %}
+                    <!-- Non-authenticated User Navigation -->
+                    <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">Features</a></li>
+                    <li class="nav-item" role="none"><a class="nav-link" href="#" role="menuitem">About Us</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarCompanyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Business</a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarCompanyDropdown">
+                            <li><a class="dropdown-item" href="{% url 'businesses:business-register' %}">Register Business</a></li>
+                            <li><a class="dropdown-item" href="{% url 'businesses:business-login' %}">Business Login</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link btn-nav main" href="{% url 'accounts:member-register' %}">Become Member</a></li>
+                    <li class="nav-item"><a class="nav-link btn-login" href="{% url 'accounts:member-login' %}">Log In</a></li>
                 {% endif %}
             </ul>
         </div>
         <!-- Mobile Offcanvas -->
-        <div class="offcanvas offcanvas-end bakgrunn-header d-lg-none" tabindex="-1" id="mobileMenu">
+        <div class="offcanvas offcanvas-end bakgrunn-header{% if user.is_authenticated %} {% if is_member %} member-navbar{% elif is_business %} business-navbar{% endif %}{% endif %} d-lg-none" tabindex="-1" id="mobileMenu">
             <div class="offcanvas-header">
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Lukk"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 <div class="offcanvas-center">
-                    <img src="{% static 'img/img.png' %}" width="75" height="75" alt="Brukerikon">
+                    {% if user.is_authenticated %}
+                        {% if is_member %}
+                            <div class="user-avatar-container member-avatar">
+                                <img src="{% static 'img/img.png' %}" width="75" height="75" alt="Member profile">
+                                <span class="user-type-badge">Member</span>
+                            </div>
+                        {% elif is_business %}
+                            <div class="user-avatar-container business-avatar">
+                                <img src="{% static 'img/img.png' %}" width="75" height="75" alt="Business profile">
+                                <span class="user-type-badge">Business</span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <img src="{% static 'img/img.png' %}" width="75" height="75" alt="User icon">
+                    {% endif %}
                 </div>
             </div>
             <div class="offcanvas-body text-center">
-                <a class="btn btn-outline-main w-100 mb-2" href="#">Lokasjon</a>
-                <a class="btn btn-outline-main w-100 mb-2" href="#">Features</a>
-                <a class="btn btn-outline-main w-100 mb-2" href="#">Om oss</a>
-                {% if user.is_authenticated and is_member %}
-                    <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:dashboard' %}">Min side</a>
-                    <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:member-profile' %}">Profil</a>
-                    <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:logout' %}">Logg ut</a>
-                {% else %}
-                    {% if user.is_authenticated and is_business %}
-                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:business-dashboard' %}">Bedriftsdashboard</a>
-                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:business-profile' %}">Rediger bedriftsprofil</a>
-                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'giveaways:giveaway-create' %}">Opprett giveaway</a>
-                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:logout' %}">Logg ut</a>
-                    {% else %}
-                        <a class="btn btn-outline-main w-100 mb-2" href="#">Bedrift</a>
-                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'businesses:business-register' %}">Bedrift</a>
-                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'accounts:member-register' %}">Bli Medlem</a>
-                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'accounts:member-login' %}">Logg inn</a>
+                {% if not user.is_authenticated or not is_business %}
+                    <a class="btn btn-outline-main w-100 mb-2" href="{% url 'giveaways:list' %}">Giveaways</a>
+                {% endif %}
+
+                {% if user.is_authenticated %}
+                    {% if is_member %}
+                        <!-- Member Mobile Menu -->
+                        <div class="mobile-menu-section mb-3">
+                            <h5 class="mobile-menu-heading">Member Menu</h5>
+                            <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:dashboard' %}">
+                                <i class="fa fa-home me-2" aria-hidden="true"></i>Dashboard
+                            </a>
+                        </div>
+                        
+                        <div class="mobile-menu-section mb-3">
+                            <h5 class="mobile-menu-heading">Profile</h5>
+                            <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:member-profile' %}">
+                                <i class="fa fa-user me-2" aria-hidden="true"></i>View Profile
+                            </a>
+                            <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:member-profile-edit' %}">
+                                <i class="fa fa-edit me-2" aria-hidden="true"></i>Edit Profile
+                            </a>
+                        </div>
+                        
+                        <div class="mobile-menu-section">
+                            <a class="btn btn-danger w-100 mb-2" href="{% url 'accounts:logout' %}">
+                                <i class="fa fa-sign-out-alt me-2" aria-hidden="true"></i>Log Out
+                            </a>
+                        </div>
+                    {% elif is_business %}
+                        <!-- Business Mobile Menu -->
+                        <div class="mobile-menu-section mb-3">
+                            <h5 class="mobile-menu-heading">Business Menu</h5>
+                            <a class="btn btn-outline-light w-100 mb-2" href="{% url 'businesses:business-dashboard' %}">
+                                <i class="fa fa-chart-line me-2" aria-hidden="true"></i>Dashboard
+                            </a>
+                            <a class="btn btn-outline-light w-100 mb-2" href="{% url 'giveaways:giveaway-create' %}">
+                                <i class="fa fa-plus-circle me-2" aria-hidden="true"></i>Create Giveaway
+                            </a>
+                        </div>
+                        
+                        <div class="mobile-menu-section mb-3">
+                            <h5 class="mobile-menu-heading">Business Profile</h5>
+                            <a class="btn btn-outline-light w-100 mb-2" href="{% url 'businesses:business-profile' %}">
+                                <i class="fa fa-store me-2" aria-hidden="true"></i>View Profile
+                            </a>
+                            <a class="btn btn-outline-light w-100 mb-2" href="{% url 'businesses:business-profile-edit' %}">
+                                <i class="fa fa-edit me-2" aria-hidden="true"></i>Edit Profile
+                            </a>
+                        </div>
+                        
+                        <div class="mobile-menu-section">
+                            <a class="btn btn-danger w-100 mb-2" href="{% url 'accounts:logout' %}">
+                                <i class="fa fa-sign-out-alt me-2" aria-hidden="true"></i>Log Out
+                            </a>
+                        </div>
                     {% endif %}
+                {% else %}
+                    <!-- Non-authenticated Mobile Menu -->
+                    <a class="btn btn-outline-main w-100 mb-2" href="#">Location</a>
+                    <a class="btn btn-outline-main w-100 mb-2" href="#features">Features</a>
+                    <a class="btn btn-outline-main w-100 mb-2" href="#about">About Us</a>
+                    
+                    <div class="mobile-menu-section mb-3">
+                        <h5 class="mobile-menu-heading">For Businesses</h5>
+                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'businesses:business-register' %}">
+                            <i class="fa fa-building me-2" aria-hidden="true"></i>Register Business
+                        </a>
+                        <a class="btn btn-outline-main w-100 mb-2" href="{% url 'businesses:business-login' %}">
+                            <i class="fa fa-sign-in-alt me-2" aria-hidden="true"></i>Business Login
+                        </a>
+                    </div>
+                    
+                    <div class="mobile-menu-section">
+                        <h5 class="mobile-menu-heading">For Members</h5>
+                        <a class="btn btn-primary w-100 mb-2" href="{% url 'accounts:member-register' %}">
+                            <i class="fa fa-user-plus me-2" aria-hidden="true"></i>Register as Member
+                        </a>
+                        <a class="btn btn-outline-light w-100 mb-2" href="{% url 'accounts:member-login' %}">
+                            <i class="fa fa-sign-in-alt me-2" aria-hidden="true"></i>Member Login
+                        </a>
+                    </div>
                 {% endif %}
             </div>
         </div>

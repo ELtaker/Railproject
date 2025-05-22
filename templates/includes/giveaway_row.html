@@ -1,0 +1,51 @@
+{% comment %}
+<!-- 
+  Giveaway Row Component
+  Used to render each row in the giveaways table
+  Usage: {% include "includes/giveaway_row.html" with row=giveaway %}
+-->
+{% endcomment %}
+
+<tr>
+    <th scope="row">{{ row.title }}</th>
+    <td>{{ row.created_at|date:"d.m.Y H:i" }}</td>
+    <td>
+        {% if row.is_active %}
+            <span class="badge bg-success" role="status">Aktiv</span>
+        {% else %}
+            <span class="badge bg-secondary" role="status">Avsluttet</span>
+        {% endif %}
+    </td>
+    <td>{{ row.entries.count }}</td>
+    <td>
+        {% if row.winner %}
+            <span class="badge bg-warning text-dark" role="status">Vinner trukket</span>
+        {% else %}
+            <span aria-label="Ingen vinner ennå">-</span>
+        {% endif %}
+    </td>
+    <td>
+        <div class="btn-group" role="group" aria-label="Handlinger for {{ row.title }}">
+            <a href="{% url 'giveaways:giveaway-detail' row.pk %}" 
+               class="btn btn-sm btn-outline-primary"
+               aria-label="Se detaljer for {{ row.title }}">
+                <i class="fa fa-info-circle" aria-hidden="true"></i> Detaljer
+            </a>
+            {% if row.is_active %}
+            <a href="{% url 'giveaways:giveaway-edit' row.pk %}" 
+               class="btn btn-sm btn-outline-secondary"
+               aria-label="Rediger {{ row.title }}">
+                <i class="fa fa-edit" aria-hidden="true"></i> Rediger
+            </a>
+            {% else %}
+                {% if not row.winner %}
+                <a href="{% url 'giveaways:draw' row.pk %}" 
+                   class="btn btn-sm btn-outline-warning"
+                   aria-label="Trekk vinner for {{ row.title }}">
+                    <i class="fa fa-trophy" aria-hidden="true"></i> Trekk vinner
+                </a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </td>
+</tr>

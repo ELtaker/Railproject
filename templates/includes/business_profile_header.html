@@ -1,0 +1,47 @@
+{% comment %}
+<!-- 
+  Business Profile Header Component
+  A reusable component for displaying business profile headers
+  
+  Usage: 
+  {% include "includes/business_profile_header.html" with 
+     title="Bedrift Dashboard" 
+     business=business 
+  %}
+-->
+{% endcomment %}
+
+<div class="text-center mb-4">
+    <h1 class="h2 mb-3">{{ title }}</h1>
+    
+    {% if business.logo %}
+    <div class="mb-3">
+        <img src="{{ business.logo.url }}" 
+             alt="Logo for {{ business.name }}" 
+             class="rounded img-thumbnail" 
+             style="max-height: 100px; object-fit: contain;"
+             aria-hidden="false">
+    </div>
+    {% endif %}
+    
+    <p class="lead text-muted">
+        {{ business.name }}
+    </p>
+    
+    {% if business.city %}
+    <p class="badge bg-info text-dark">
+        <i class="fa fa-map-marker-alt me-1" aria-hidden="true"></i> 
+        {% if business.get_display_address %}
+            {{ business.get_display_address }}
+        {% else %}
+            {{ business.city }}
+        {% endif %}
+    </p>
+    {% endif %}
+    
+    <div class="mt-3">
+        <a href="{% url 'businesses:business-profile-edit' %}" class="btn btn-outline-primary" aria-label="Rediger bedriftsprofil">
+            <i class="fa fa-user-edit" aria-hidden="true"></i> Rediger Bedriftsprofil
+        </a>
+    </div>
+</div>

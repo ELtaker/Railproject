@@ -1,7 +1,15 @@
 # WINDSURF RULES FOR DJANGO WEB APP - RAILDROPS CORE (V3)
 
+[Django-Official-Standards]
+follow-django-orm-best-practices = true
+use-django-authentication-system = true
+implement-django-security-checklist = true
+follow-django-project-layout = true
+use-django-migrations-properly = true
+follow-django-documentation-style = true
+
 [Raildrops-Core]
-# Regler for Raildrops kjernefunksjonalitet og Django
+# Core Functionality Requirements
 require-app-accounts = true
 require-app-giveaways = true
 require-app-businesses = true
@@ -10,6 +18,8 @@ use-django-groups-members = true
 use-business-profile-model = true
 check-member-role-implementation = true
 check-business-user-implementation = true
+
+# Giveaway System Requirements
 require-giveaway-model = true
 require-giveaway-location-field = true
 require-giveaway-question-field = true
@@ -25,14 +35,23 @@ store-selected-answer = true
 base-winner-selection-on-correct-answer = true
 implement-random-winner-from-correct = true
 handle-winner-announcement = true
+
+# Testing Requirements
 test-accounts-app = true
 test-giveaways-app = true
 test-business-features = true
 test-notification-system = true
+
+# Security and Permissions
 enforce-role-based-permissions = true
 handle-business-location-registration = true
 handle-member-location-permission = true
 implement-location-based-filtering = true
+enforce-csrf-protection = true
+prevent-sql-injection = true
+mitigate-xss = true
+
+# Coding Standards
 enforce-pep8-compliance = true
 no-raw-sql = true
 prefer-cbvs-for-complex = true
@@ -42,18 +61,18 @@ use-django-auth = true
 use-django-forms = true
 follow-mvt-pattern = true
 apply-middleware-appropriately = true
+
+# Naming Conventions
 orm-model-naming-convention = lowercase_with_underscores
 orm-field-naming-convention = lowercase_with_underscores
 require-model-str-representation = true
 view-naming-convention = CamelCaseForCBV / lowercase_with_underscores_for_FBV
-template-naming-convention = lowercase_with_underscores.html
 url-pattern-naming-convention = lowercase-with-hyphens
+
+# Architecture Guidelines
 keep-business-logic-in-models-forms = true
 keep-views-light = true
 define-restful-urls = true
-enforce-csrf-protection = true
-prevent-sql-injection = true
-mitigate-xss = true
 use-django-testing-tools = true
 leverage-django-caching = true
 manage-static-files-properly = true
@@ -65,6 +84,8 @@ use-try-except-blocks = true
 use-django-validation = true
 customize-error-pages = true
 use-django-signals-for-decoupling = true
+
+# Project Setup
 specify-core-dependencies = true
 prefer-production-database = PostgreSQL|MySQL
 follow-docker-instructions = true
@@ -101,6 +122,35 @@ require-utils-directory = true
 require-updated-readme = true
 require-updated-onboarding-doc = true
 
-[Structure]
-require-modular-code = true
-require-app-tests-directory = true
+[Template-Structure]
+# Project-level Templates Directory
+enforce-project-level-templates-dir = true
+project-level-templates-dir-path = templates/
+project-level-templates-dir-content = base.html, includes/
+configure-templates-dirs-in-settings = true
+
+# App-specific Templates Organization
+template-organization-pattern = project_level_by_app
+app-templates-location = templates/{app_name}/
+prevent-template-name-collisions = true
+template-file-extension = .html
+template-naming-convention = lowercase_with_underscores
+
+# Template Inheritance
+use-template-inheritance = true
+define-base-template = base.html
+define-role-specific-base-templates = base_accounts.html, base_business.html, base_admin.html
+role-specific-base-templates-inherit-from-base = true
+
+# Template Fragments and Includes
+use-template-includes-for-snippets = true
+include-snippet-naming-convention = underscore_prefix_for_reusable_snippets
+template-include-path-resolution = relative_to_configured_template_dirs
+
+# Template Performance
+limit-template-nesting-depth = 3
+prefer-template-fragment-caching = true
+
+# Template Configuration
+ensure-app-dirs-true = true
+context-processor-location = within_app_or_shared_utils_dir

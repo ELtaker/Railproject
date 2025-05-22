@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
-{% block title %}Log In | Raildrops{% endblock %}
+{% block title %}Business Login | Raildrops{% endblock %}
 {% block content %}
 <!-- Skip link target -->
 <div id="main-content" tabindex="-1"></div>
@@ -10,7 +9,7 @@
         <div class="col-md-6 col-lg-5">
             <div class="card shadow-sm border-0 rounded-3">
                 <div class="card-body p-4">
-                    <h1 class="card-title h2 mb-4 text-center">Log In</h1>
+                    <h1 class="card-title h2 mb-4 text-center">Business Login</h1>
                     
                     {% if messages %}
                         {% for message in messages %}
@@ -31,6 +30,7 @@
                             {% endfor %}
                         </div>
                         {% endif %}
+                        
                         <div class="mb-3">
                             <label for="id_email" class="form-label">Email</label>
                             <div class="input-group has-validation">
@@ -87,27 +87,21 @@
                         
                         <div class="d-grid gap-2 mb-3">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fa fa-sign-in-alt me-2" aria-hidden="true"></i> Log In
+                                <i class="fa fa-sign-in-alt me-2" aria-hidden="true"></i> Login
                             </button>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <hr class="flex-grow-1 me-2">
-                            <span class="text-muted">or</span>
-                            <hr class="flex-grow-1 ms-2">
                         </div>
                     </form>
                     
-                    <div class="mb-3">
-                        <a class="btn btn-outline-secondary w-100" href="{% url 'accounts:business-login' %}" aria-label="Logg inn med bedriftskonto">
-                            <i class="fa fa-building me-2" aria-hidden="true"></i> Logg inn som bedrift
-                        </a>
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Don't have a business account? 
+                            <a href="{% url 'businesses:business-register' %}" class="fw-bold" aria-label="Register a new business account">Register</a>
+                        </p>
                     </div>
                     
-                    <div class="text-center mt-4">
-                        <p class="mb-0">Ikke medlem? 
-                            <a href="{% url 'register' %}" class="fw-bold" aria-label="Gå til registrering for nye brukere">Registrer deg</a>
-                        </p>
+                    <div class="mt-3 text-center">
+                        <a href="{% url 'accounts:member-login' %}" class="btn btn-outline-secondary btn-sm" aria-label="Login as a member instead">
+                            <i class="fa fa-user me-1" aria-hidden="true"></i> Login as member instead
+                        </a>
                     </div>
                 </div>
             </div>

@@ -1,0 +1,111 @@
+{% comment %}
+<!-- 
+  Nearby Giveaways Component
+  A reusable component for displaying giveaways near the user's location
+  
+  Usage: 
+  {% include "includes/nearby_giveaways.html" with 
+     nearby_giveaways=nearby_giveaways 
+     user_location=user.city
+  %}
+-->
+{% endcomment %}
+
+{% load cache %}
+{% cache 1800 user_nearby_giveaways user.id %}
+<div class="card shadow-sm border-0 mt-4 mb-4">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0">Giveaways i nærheten</h2>
+        {% if user.city %}
+        <span class="badge bg-info text-dark">
+            <i class="fa fa-map-marker-alt me-1" aria-hidden="true"></i> {{ user_location }}
+        </span>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if nearby_giveaways %}
+            <div class="d-none d-md-block">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <caption class="visually-hidden">Giveaways i nærheten av deg</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Tittel</th>
+                                <th scope="col">Bedrift</th>
+                                <th scope="col">Sluttdato</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Handling</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for giveaway in nearby_giveaways %}
+                            <tr>
+                                <td>{{ giveaway.title }}</td>
+                                <td>{{ giveaway.business.name }}</td>
+                                <td>{{ giveaway.end_date|date:"d.m.Y" }}</td>
+                                <td>
+                                    {% if giveaway.is_active %}
+                                        <span class="badge bg-success">Aktiv</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Avsluttet</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'giveaways:giveaway-detail' giveaway.pk %}" 
+                                       class="btn btn-sm btn-outline-primary"
+                                       aria-label="Se detaljer for {{ giveaway.title }}">
+                                        <i class="fa fa-info-circle" aria-hidden="true"></i> Detaljer
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Mobile Card View (visible on small screens only) -->
+            <div class="d-md-none mt-3">
+                {% for giveaway in nearby_giveaways %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h3 class="card-title h5">{{ giveaway.title }}</h3>
+                        <p class="small text-muted mb-2">{{ giveaway.business.name }}</p>
+                        <div class="d-flex justify-content-between mb-2">
+                            <small class="text-muted">Sluttdato: {{ giveaway.end_date|date:"d.m.Y" }}</small>
+                            {% if giveaway.is_active %}
+                                <span class="badge bg-success">Aktiv</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Avsluttet</span>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'giveaways:giveaway-detail' giveaway.pk %}" 
+                           class="btn btn-outline-primary btn-sm w-100"
+                           aria-label="Se detaljer for {{ giveaway.title }}">
+                            <i class="fa fa-info-circle" aria-hidden="true"></i> Se detaljer
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                <i class="fa fa-info-circle me-2" aria-hidden="true"></i>
+                {% if user.city %}
+                    Det er ingen aktive giveaways i nærheten av {{ user_location }} for øyeblikket.
+                {% else %}
+                    Oppgi din lokasjon i profilen for å se giveaways i nærheten.
+                {% endif %}
+            </div>
+            
+            {% if not user.city %}
+            <div class="text-center mt-3">
+                <a href="{% url 'accounts:member-profile-edit' %}" class="btn btn-outline-primary">
+                    <i class="fa fa-user-edit me-2" aria-hidden="true"></i> Oppdater profil med lokasjon
+                </a>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endcache %}
