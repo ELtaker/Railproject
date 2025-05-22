@@ -24,7 +24,8 @@ Raildrops is a modular Django 5.2 web application for managing location-based gi
 - **Location-Based Participation:** Members must be in the same city as the business to participate
 - **Question & Answer Validation:** Customizable questions with answer validation
 - **Geolocation Integration:** Browser-based geolocation with OpenStreetMap reverse geocoding
-- **Winner Selection:** Automated winner selection based on correct answers
+- **Scalable Winner Selection:** Random winner selection system with visual arcade claw animation
+- **Asynchronous Processing:** Background task processing for winner selection with Celery
 - **Business Giveaway Dashboard:** Enhanced interface for businesses to manage their giveaways
 - **Status-Based Filtering:** Filter giveaways by active, upcoming, or ended status
 - **Advanced Sorting Options:** Sort giveaways by various criteria including participation rate
@@ -326,6 +327,25 @@ def cities_match(user_city: str, business_city: str) -> bool:
 
 ## Recent Updates (May 2025)
 
+### Version 2.3.0 (2025-05-22)
+
+#### Scalable Winner Selection System
+- **Random Selection Algorithm:** Enhanced winner selection to randomly draw from all entries
+- **Arcade Claw Animation:** Interactive visual representation of the winner selection process
+- **Asynchronous Processing:** Background tasks for selecting winners from large datasets
+- **Performance Optimization:** Chunked processing and batch operations for handling thousands of entries
+- **Winner Notification:** Improved notification system for winners and businesses
+- **Admin Controls:** Enhanced admin interface for monitoring winner selection tasks
+- **Accessibility Features:** ARIA-compliant animations with keyboard controls
+
+#### Winner Selection Functionality
+- Added random winner selection for giveaways
+- Winners are randomly drawn from all entries (not filtered by answer correctness)
+- Entry answers are now treated as customer survey/feedback data
+- Automated winner selection for expired giveaways via scheduled tasks
+- Admin interface support for manual winner selection
+- Winner notification tracking system
+
 ### Version 2.2.0 (2025-05-22)
 
 1. **Giveaway Module Enhancements**
@@ -407,8 +427,30 @@ Updated `requirements.txt` with the following packages:
 - URL not found errors
 
 **Solution:**
-- Use the profile edit page to access password change functionality
+- Fixed in the latest update (May 2025)
+- Ensure you're using the correct form from your profile page
 - Password change URLs have been standardized to `accounts:password_change`
+- Clear browser cache if the issue persists
+
+#### Problem: Giveaway Participation Error
+**Symptoms:**
+- "RelatedObjectDoesNotExist: Entry has no giveaway" error when submitting a giveaway entry
+- Form submission fails with a server error
+
+**Solution:**
+- Fixed in latest update (May 2025)
+- The entry validation process now properly handles the relationship sequence
+- If problem persists, try clearing your browser cache and cookies
+
+#### Problem: Admin Interface Errors
+**Symptoms:**
+- "KeyError: '<span style="color: gray;">✗</span>'" when viewing giveaways in admin
+- "Reverse for 'auth_user_change' not found" when viewing entries
+
+**Solution:**
+- Fixed in latest update (May 2025)
+- Admin interface now uses HTML entities instead of Unicode characters
+- User references now use dynamic app_label and model_name resolution
 
 #### Problem: Bootstrap Styles Not Applied Correctly
 **Symptoms:**

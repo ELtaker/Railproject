@@ -27,8 +27,8 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 
 from .views import (
-    UserRegisterView, ProfileView, ProfileEditView,
-    member_login_view, BusinessRegisterView,
+    ProfileView, ProfileEditView,
+    member_login_view, member_register_view, BusinessRegisterView,
     custom_logout_view, dashboard_view,
     update_location
 )
@@ -44,7 +44,7 @@ urlpatterns = [
     # ===== Medlemsregistrering og innlogging =====
     path(
         'member/register/', 
-        secure_view(UserRegisterView.as_view()), 
+        member_register_view,  # Already has csrf_protect and ensure_csrf_cookie decorators
         name='member-register'
     ),
     path(

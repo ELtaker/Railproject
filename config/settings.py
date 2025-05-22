@@ -29,6 +29,8 @@ INSTALLED_APPS = [
     'accounts',
     'businesses',
     'giveaways',
+    # Task processing
+    'django_celery_results',
     'notifications',
     # Add other apps here
 ]
@@ -126,3 +128,20 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Session and CSRF Settings
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_SECURE = False    # Set to True in production with HTTPS
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+# Fix for development environments
+CSRF_COOKIE_SAMESITE = None  # Set to 'Lax' in production
+SESSION_COOKIE_SAMESITE = None  # Set to 'Lax' in production
+
+# Debug-only settings (change in production)
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+CSRF_COOKIE_DOMAIN = None
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000', 'http://localhost:8000']
+CSRF_USE_SESSIONS = False  # Set to True for added security in production

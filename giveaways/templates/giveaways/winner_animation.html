@@ -1,0 +1,574 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Winner Selection Animation" %} - {{ giveaway.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .animation-container {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        position: relative;
+        background-color: var(--bs-light);
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .claw-canvas {
+        width: 100%;
+        height: 500px;
+        border-radius: 8px;
+        background-color: var(--bs-light);
+    }
+    
+    .animation-controls {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .entry-item {
+        padding: 8px;
+        margin: 4px;
+        border-radius: 4px;
+        background-color: var(--bs-primary-bg-subtle);
+        border: 1px solid var(--bs-primary-border-subtle);
+        color: var(--bs-body-color);
+        font-weight: 500;
+        text-align: center;
+    }
+    
+    .winner-announcement {
+        background-color: var(--bs-success-bg-subtle);
+        border: 1px solid var(--bs-success-border-subtle);
+        color: var(--bs-success-text);
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        border-radius: 8px;
+        text-align: center;
+        animation: winner-pulse 2s infinite;
+    }
+    
+    @keyframes winner-pulse {
+        0% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+    }
+    
+    .winner-name {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+    
+    .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+    
+    /* Accessibility additions */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        .animation-container {
+            background-color: var(--bs-dark);
+        }
+        
+        .claw-canvas {
+            background-color: var(--bs-dark);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'giveaways:list' %}">{% trans "Giveaways" %}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'giveaways:giveaway-detail' giveaway.id %}">{{ giveaway.title }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% trans "Winner Selection" %}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="mb-4">
+                {% trans "Winner Selection" %}: {{ giveaway.title }}
+            </h1>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2>{% trans "Giveaway Information" %}</h2>
+                    <p><strong>{% trans "Business" %}:</strong> {{ giveaway.business.name }}</p>
+                    <p><strong>{% trans "Location" %}:</strong> {{ giveaway.business.city }}</p>
+                    <p><strong>{% trans "Ended" %}:</strong> {{ giveaway.end_date }}</p>
+                </div>
+            </div>
+            
+            {% if has_winner %}
+                <div class="winner-announcement" role="alert" aria-live="polite">
+                    <h2 class="h3">{% trans "Congratulations!" %}</h2>
+                    <p class="winner-name">{{ winner.first_name }} {{ winner.last_name }}</p>
+                    <p>{% trans "Has been selected as the winner!" %}</p>
+                    <p><small>{% trans "Selected at" %}: {{ winner.selected_at }}</small></p>
+                </div>
+                
+                <div class="text-center mb-4">
+                    <button id="replay-animation" class="btn btn-primary">
+                        <i class="fas fa-redo me-2"></i>{% trans "Replay Animation" %}
+                    </button>
+                </div>
+            {% endif %}
+            
+            <div class="animation-container">
+                <div id="loading-spinner" class="loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">{% trans "Loading animation..." %}</span>
+                    </div>
+                </div>
+                <canvas id="claw-canvas" class="claw-canvas" aria-label="{% trans 'Claw machine animation for winner selection' %}"></canvas>
+            </div>
+            
+            <div class="animation-controls">
+                <button id="start-animation" class="btn btn-primary">
+                    <i class="fas fa-play me-2"></i>{% trans "Start Selection" %}
+                </button>
+                <button id="skip-animation" class="btn btn-outline-secondary">
+                    <i class="fas fa-forward me-2"></i>{% trans "Skip to Result" %}
+                </button>
+            </div>
+            
+            <div class="mt-4" id="animation-status" aria-live="polite">
+                <p class="text-center">{% trans "Click Start Selection to begin the winner selection process!" %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Winner Animation using HTML5 Canvas
+    document.addEventListener('DOMContentLoaded', function() {
+        const canvas = document.getElementById('claw-canvas');
+        const ctx = canvas.getContext('2d');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const startButton = document.getElementById('start-animation');
+        const skipButton = document.getElementById('skip-animation');
+        const replayButton = document.getElementById('replay-animation');
+        const animationStatus = document.getElementById('animation-status');
+        
+        // Animation state
+        let entries = [];
+        let selectedEntry = null;
+        let animationStarted = false;
+        let animationComplete = false;
+        let clawX = 0;
+        let clawY = 0;
+        let targetX = 0;
+        let targetY = 0;
+        let clawClosed = false;
+        let clawMovingDown = false;
+        let clawMovingUp = false;
+        let clawWithEntry = false;
+        let entryPositions = [];
+        
+        // Claw machine colors
+        const colors = {
+            machine: '#3b5998',
+            claw: '#cc0000',
+            background: '#f8f9fa',
+            text: '#212529'
+        };
+        
+        // Set canvas dimensions
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = 500;
+        }
+        
+        // Initialize canvas
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Load entry data from API
+        async function loadEntryData() {
+            try {
+                const response = await fetch(`{% url 'giveaways:animation-data' %}?giveaway_id={{ giveaway.id }}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    showError(data.message || 'Error loading entry data');
+                    return;
+                }
+                
+                entries = data.entries;
+                
+                // Position entries randomly in the machine
+                positionEntries();
+                
+                // Hide loading spinner and show canvas
+                loadingSpinner.style.display = 'none';
+                canvas.style.display = 'block';
+                
+                // Draw initial state
+                drawClawMachine();
+                
+                {% if has_winner %}
+                // If we already have a winner, pre-select them
+                selectedEntry = entries.find(function(entry) {
+                    return entry.first_name === "{{ winner.first_name }}" && 
+                           entry.last_name === "{{ winner.last_name }}";
+                });
+                {% endif %}
+                
+            } catch (error) {
+                console.error('Error loading entry data:', error);
+                showError('Failed to load entry data. Please try again.');
+            }
+        }
+        
+        // Position entries randomly in the machine
+        function positionEntries() {
+            entryPositions = [];
+            
+            // Calculate how many entries can fit in a row
+            const entryWidth = 80;
+            const entryHeight = 40;
+            const padding = 10;
+            const machineWidth = canvas.width - 60;
+            const machineHeight = canvas.height - 160;
+            
+            const entriesPerRow = Math.floor(machineWidth / (entryWidth + padding));
+            
+            // Position entries in a grid with slight randomness
+            entries.forEach((entry, index) => {
+                const row = Math.floor(index / entriesPerRow);
+                const col = index % entriesPerRow;
+                
+                const baseX = 30 + col * (entryWidth + padding) + (Math.random() * padding - padding/2);
+                const baseY = 80 + row * (entryHeight + padding) + (Math.random() * padding - padding/2);
+                
+                entryPositions.push({
+                    x: baseX,
+                    y: baseY,
+                    width: entryWidth,
+                    height: entryHeight,
+                    entry: entry
+                });
+            });
+        }
+        
+        // Draw the claw machine with entries
+        function drawClawMachine() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw machine background
+            ctx.fillStyle = colors.background;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw machine border
+            ctx.strokeStyle = colors.machine;
+            ctx.lineWidth = 6;
+            ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+            
+            // Draw machine top
+            ctx.fillStyle = colors.machine;
+            ctx.fillRect(20, 20, canvas.width - 40, 50);
+            
+            // Draw entries
+            entryPositions.forEach(pos => {
+                if (clawWithEntry && selectedEntry && pos.entry.id === selectedEntry.id) {
+                    return; // Don't draw the selected entry in its original position
+                }
+                
+                ctx.fillStyle = '#e6f7ff';
+                ctx.strokeStyle = '#0d6efd';
+                ctx.lineWidth = 2;
+                
+                // Draw entry background
+                ctx.fillRect(pos.x, pos.y, pos.width, pos.height);
+                ctx.strokeRect(pos.x, pos.y, pos.width, pos.height);
+                
+                // Draw entry text
+                ctx.fillStyle = colors.text;
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                const name = `${pos.entry.first_name} ${pos.entry.last_name.charAt(0)}.`;
+                ctx.fillText(name, pos.x + pos.width/2, pos.y + pos.height/2);
+            });
+            
+            // Draw claw
+            drawClaw();
+        }
+        
+        // Draw the claw at its current position
+        function drawClaw() {
+            ctx.strokeStyle = colors.claw;
+            ctx.lineWidth = 4;
+            
+            // Draw claw cable
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 20);
+            ctx.lineTo(clawX, clawY - 30);
+            ctx.stroke();
+            
+            // Draw claw base
+            ctx.beginPath();
+            ctx.arc(clawX, clawY - 15, 15, 0, Math.PI * 2);
+            ctx.fillStyle = '#888';
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw claw arms
+            const openingAngle = clawClosed ? 0.3 : 0.8;
+            
+            // Left arm
+            ctx.beginPath();
+            ctx.moveTo(clawX, clawY - 15);
+            ctx.lineTo(clawX - 20 * openingAngle, clawY + 20);
+            ctx.stroke();
+            
+            // Right arm
+            ctx.beginPath();
+            ctx.moveTo(clawX, clawY - 15);
+            ctx.lineTo(clawX + 20 * openingAngle, clawY + 20);
+            ctx.stroke();
+            
+            // Draw selected entry if the claw has grabbed it
+            if (clawWithEntry && selectedEntry) {
+                ctx.fillStyle = '#e6f7ff';
+                ctx.strokeStyle = '#0d6efd';
+                ctx.lineWidth = 2;
+                
+                // Draw entry background
+                ctx.fillRect(clawX - 40, clawY, 80, 40);
+                ctx.strokeRect(clawX - 40, clawY, 80, 40);
+                
+                // Draw entry text
+                ctx.fillStyle = colors.text;
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                const name = selectedEntry.first_name + ' ' + selectedEntry.last_name.charAt(0) + '.';
+                ctx.fillText(name, clawX, clawY + 20);
+            }
+        }
+        
+        // Run the animation
+        function animate() {
+            if (!animationStarted) return;
+            
+            drawClawMachine();
+            
+            if (clawMovingDown) {
+                // Move claw down
+                clawY += 3;
+                
+                // Check if claw reached target position
+                if (clawY >= targetY) {
+                    clawMovingDown = false;
+                    clawClosed = true;
+                    
+                    // Check if claw grabbed an entry
+                    entryPositions.forEach(pos => {
+                        if (
+                            clawX >= pos.x && clawX <= pos.x + pos.width &&
+                            clawY >= pos.y && clawY <= pos.y + pos.height
+                        ) {
+                            selectedEntry = pos.entry;
+                            clawWithEntry = true;
+                            
+                            // Update status
+                            animationStatus.innerHTML = `<p class="text-center">Selected: ${selectedEntry.first_name} ${selectedEntry.last_name}</p>`;
+                        }
+                    });
+                    
+                    // If no entry selected, pick one randomly
+                    if (!selectedEntry && entries.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * entries.length);
+                        selectedEntry = entries[randomIndex];
+                        clawWithEntry = true;
+                        
+                        // Update status
+                        animationStatus.innerHTML = `<p class="text-center">Selected: ${selectedEntry.first_name} ${selectedEntry.last_name}</p>`;
+                    }
+                    
+                    // Start moving back up
+                    clawMovingUp = true;
+                    
+                    // Play grab sound
+                    playSound('grab');
+                }
+            } else if (clawMovingUp) {
+                // Move claw up with the selected entry
+                clawY -= 2;
+                
+                // Check if claw reached the top
+                if (clawY <= 70) {
+                    clawMovingUp = false;
+                    
+                    // Move to drop position
+                    targetX = canvas.width / 2;
+                    
+                    // If claw is far from drop position, move horizontally
+                    if (Math.abs(clawX - targetX) > 5) {
+                        const dx = targetX - clawX;
+                        clawX += dx * 0.05;
+                    } else {
+                        // Drop the entry
+                        animationComplete = true;
+                        
+                        // Show winner announcement
+                        showWinner();
+                        
+                        // Play win sound
+                        playSound('win');
+                    }
+                }
+            } else if (!animationComplete) {
+                // Move claw horizontally toward target
+                const dx = targetX - clawX;
+                clawX += dx * 0.05;
+                
+                // If close enough to target, start moving down
+                if (Math.abs(dx) < 5 && !clawMovingDown && !clawMovingUp) {
+                    clawMovingDown = true;
+                    
+                    // Play move sound
+                    playSound('move');
+                }
+            }
+            
+            // Continue animation
+            if (!animationComplete) {
+                requestAnimationFrame(animate);
+            }
+        }
+        
+        // Start the animation
+        function startAnimation() {
+            if (animationStarted) return;
+            
+            // Reset animation state
+            clawX = canvas.width / 2;
+            clawY = 70;
+            clawClosed = false;
+            clawMovingDown = false;
+            clawMovingUp = false;
+            clawWithEntry = false;
+            selectedEntry = null;
+            animationComplete = false;
+            
+            // Disable start button
+            startButton.disabled = true;
+            
+            // Pick a random target
+            const randomPos = entryPositions[Math.floor(Math.random() * entryPositions.length)];
+            targetX = randomPos.x + randomPos.width / 2;
+            targetY = randomPos.y + randomPos.height / 2;
+            
+            // Start animation
+            animationStarted = true;
+            animate();
+            
+            // Update status
+            animationStatus.innerHTML = `<p class="text-center">Selecting a winner...</p>`;
+            
+            // Play start sound
+            playSound('start');
+        }
+        
+        // Skip to the result
+        function skipToResult() {
+            if (!animationStarted || animationComplete) return;
+            
+            // Force animation to complete
+            animationComplete = true;
+            
+            // If no entry selected, pick one randomly
+            if (!selectedEntry && entries.length > 0) {
+                const randomIndex = Math.floor(Math.random() * entries.length);
+                selectedEntry = entries[randomIndex];
+                clawWithEntry = true;
+            }
+            
+            // Show winner
+            showWinner();
+            
+            // Play win sound
+            playSound('win');
+        }
+        
+        // Show the winner announcement
+        function showWinner() {
+            if (!selectedEntry) return;
+            
+            // Create winner announcement
+            const winnerHtml = '<div class="winner-announcement" role="alert">' +
+                '<h2 class="h3">Congratulations!</h2>' +
+                '<p class="winner-name">' + selectedEntry.first_name + ' ' + selectedEntry.last_name + '</p>' +
+                '<p>Has been selected as the winner!</p>' +
+            '</div>';
+            
+            animationStatus.innerHTML = winnerHtml;
+            
+            // Enable start button for replay
+            startButton.disabled = false;
+            startButton.innerHTML = '<i class="fas fa-redo me-2"></i>Replay';
+        }
+        
+        // Show error message
+        function showError(message) {
+            loadingSpinner.style.display = 'none';
+            animationStatus.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    ${message}
+                </div>
+            `;
+        }
+        
+        // Play sound effect (mock implementation)
+        function playSound(soundType) {
+            // In a real implementation, you would play actual sound files
+            console.log(`Playing sound: ${soundType}`);
+        }
+        
+        // Event listeners
+        startButton.addEventListener('click', startAnimation);
+        skipButton.addEventListener('click', skipToResult);
+        
+        if (replayButton) {
+            replayButton.addEventListener('click', () => {
+                animationStarted = false;
+                startAnimation();
+            });
+        }
+        
+        // Load entry data
+        loadEntryData();
+    });
+</script>
+{% endblock %}

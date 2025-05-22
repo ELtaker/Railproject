@@ -41,7 +41,7 @@ class GiveawayAdmin(admin.ModelAdmin):
         }),
     )
     
-    actions = ['mark_active', 'mark_inactive', 'export_entries', 'select_winner']
+    actions = ['mark_active', 'mark_inactive', 'export_entries']
     
     def business_name(self, obj):
         """Display business name with link to business admin"""
@@ -55,13 +55,13 @@ class GiveawayAdmin(admin.ModelAdmin):
     def status_badge(self, obj):
         """Display status with color-coded badge"""
         if not obj.is_active:
-            return format_html('<span style="color: red;">✗ Inaktiv</span>')
+            return format_html('<span style="color: red;">Inaktiv</span>')
         elif obj.is_expired():
-            return format_html('<span style="color: orange;">⏰ Avsluttet</span>')
+            return format_html('<span style="color: orange;">Avsluttet</span>')
         elif obj.is_upcoming():
-            return format_html('<span style="color: blue;">⏳ Kommende</span>')
+            return format_html('<span style="color: blue;">Kommende</span>')
         else:
-            return format_html('<span style="color: green;">✓ Pågående</span>')
+            return format_html('<span style="color: green;">Pågående</span>')
     status_badge.short_description = _('Status')
     
     def status_display(self, obj):
@@ -132,86 +132,6 @@ class GiveawayAdmin(admin.ModelAdmin):
                 
         return response
     export_entries.short_description = _('Eksportér deltakere til CSV')
-    
-    def select_winner(self, request, queryset):
-        """
-        Admin action to select a winner for the selected giveaways.
-        Only works for expired giveaways without existing winners.
-        Uses the scalable winner selection system.
-        """
-        from django.urls import reverse
-        from django.utils.html import mark_safe
-        from .tasks import select_winners_batch
-        from .services.winner_selection import find_eligible_giveaways
-        
-        # Filter for eligible giveaways
-        from django.utils import timezone
-        now = timezone.now()
-        
-        # Count all selected giveaways
-        total_count = queryset.count()
-        
-        # Filter for eligible giveaways only
-        eligible_giveaways = queryset.filter(end_date__lt=now, is_active=True)
-        eligible_ids = list(eligible_giveaways.values_list('id', flat=True))
-        
-        # Find which ones already have winners
-        from .models import Winner
-        existing_winners = Winner.objects.filter(giveaway__in=eligible_giveaways).values_list('giveaway_id', flat=True)
-        existing_winners = list(existing_winners)
-        
-        # Get final list of eligible giveaways without winners
-        final_eligible_ids = [gid for gid in eligible_ids if gid not in existing_winners]
-        
-        # Create summary counts
-        not_expired_count = total_count - len(eligible_ids)
-        has_winner_count = len(existing_winners)
-        eligible_count = len(final_eligible_ids)
-        
-        if eligible_count == 0:
-            # No eligible giveaways
-            message_parts = []
-            if not_expired_count > 0:
-                message_parts.append(f"{not_expired_count} ikke utløpt")
-            if has_winner_count > 0:
-                message_parts.append(f"{has_winner_count} har allerede vinner")
-                
-            reason = " og ".join(message_parts) if message_parts else "ukjent årsak"
-            
-            self.message_user(
-                request,
-                _(f'Ingen kvalifiserte giveaways å trekke vinnere for ({reason}).'),
-                level='warning'
-            )
-            return
-        
-        # Check for large batches
-        batch_size = 100  # Default chunk size
-        if eligible_count > 200:
-            self.message_user(
-                request,
-                _(f'Starter trekning av vinnere for {eligible_count} giveaways. Dette kan ta litt tid.'),
-                level='warning'
-            )
-        
-        # Start the asynchronous batch task
-        result = select_winners_batch.delay(final_eligible_ids, batch_size)
-        task_id = result.task_id
-        
-        # Provide feedback with a link to check status
-        status_url = reverse('admin:winner_selection_status') + f'?task_id={task_id}'
-        
-        self.message_user(
-            request,
-            mark_safe(_(
-                f'Trekning av vinnere startet for {eligible_count} giveaways. '
-                f'<a href="{status_url}" target="_blank" class="winner-status-link">Sjekk status</a>. '
-                f'<small>({not_expired_count} ikke utløpt, {has_winner_count} har allerede vinner)</small>'
-            )),
-            level='success'
-        )
-    
-    select_winner.short_description = _('Trekk vinner for valgte giveaways')
 
 @admin.register(Entry)
 class EntryAdmin(admin.ModelAdmin):
@@ -317,17 +237,18 @@ class WinnerAdmin(admin.ModelAdmin):
     
     def was_correct_answer_display(self, obj):
         """Display whether winner had correct answer"""
-        if obj.was_correct_answer():
-            return format_html('<span style="color: green;">✓</span>')
-        return format_html('<span style="color: red;">✗</span>')
+        correct = obj.was_correct_answer()
+        if correct:
+            return format_html('<span style="color: green;">Ja</span>')
+        return format_html('<span style="color: red;">Nei</span>')
     was_correct_answer_display.short_description = _('Korrekt svar')
-    # Removed boolean=True to fix admin display error
+    was_correct_answer_display.boolean = False  # Changed to False to avoid using boolean icons
     
     def notification_status(self, obj):
         """Display notification status"""
         if obj.notification_sent:
-            return format_html('<span style="color: green;">Sendt ✓</span>')
-        return format_html('<span style="color: orange;">Venter ⏳</span>')
+            return format_html('<span style="color: green;">Sendt</span>')
+        return format_html('<span style="color: orange;">Ikke sendt</span>')
     notification_status.short_description = _('Varsling')
     
     def entry_details(self, obj):
@@ -335,16 +256,21 @@ class WinnerAdmin(admin.ModelAdmin):
         entry = obj.get_entry()
         if entry:
             url = reverse('admin:giveaways_entry_change', args=[entry.id])
-            return format_html(
-                '<a href="{}">Se detaljer</a><br>Svar: {}<br>Lokasjon: {}<br>Tidspunkt: {}',
-                url, entry.answer, entry.user_location_city, entry.entered_at
-            )
-        return 'Ingen deltakerdetaljer funnet'
+            return format_html('''
+                <a href="{}" class="button">Se påmelding</a>
+                <p><strong>Svar:</strong> {}</p>
+                <p><strong>Lokasjon:</strong> {}</p>
+                <p><strong>Dato:</strong> {}</p>
+            ''', url, entry.answer, entry.user_location_city, 
+            entry.entered_at.strftime('%Y-%m-%d %H:%M'))
+        return 'Ingen påmelding funnet'
     entry_details.short_description = _('Deltakerdetaljer')
     
     def mark_notification_sent(self, request, queryset):
         """Mark notifications as sent for selected winners"""
         for winner in queryset:
             winner.mark_notification_sent()
-        self.message_user(request, f'Marked notifications as sent for {queryset.count()} winners.')
+        
+        count = queryset.count()
+        self.message_user(request, f'{count} winners marked as notified.')
     mark_notification_sent.short_description = _('Merk varslinger som sendt')

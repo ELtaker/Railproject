@@ -28,6 +28,10 @@ django-crispy-forms==2.1
 crispy-bootstrap5==2023.10
 django-widget-tweaks==1.5.0  # Form field rendering enhancements
 
+# Task Queue & Async Processing
+celery==5.5.2
+kombu==5.5.3  # Messaging library for Celery
+
 # Location & Maps
 geopy==2.4.1
 

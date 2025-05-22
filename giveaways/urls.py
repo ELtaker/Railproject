@@ -19,7 +19,8 @@ from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
 
 from .views import (GiveawayCreateView, GiveawayListView, GiveawayDetailView,
-                  BusinessGiveawayListView, GiveawayEditView)
+                  BusinessGiveawayListView, GiveawayEditView, WinnerSelectionStatusView,
+                  GiveawayAnimationDataView, WinnerAnimationView)
 from .permissions import is_member, can_enter_giveaway
 
 app_name = 'giveaways'
@@ -64,9 +65,31 @@ urlpatterns = [
         login_required(secure_view(GiveawayEditView.as_view())), 
         name='giveaway-edit'
     ),
+    
+    # ===== Admin-only API for winner selection monitoring =====
+    path(
+        'admin/winner-status/', 
+        WinnerSelectionStatusView.as_view(), 
+        name='winner_selection_status'
+    ),
+    
+    # ===== Winner selection animation views =====
+    path(
+        '<int:pk>/winner-animation/', 
+        secure_view(WinnerAnimationView.as_view()), 
+        name='winner-animation'
+    ),
+    
+    # ===== API endpoint for animation data =====
+    path(
+        'api/animation-data/', 
+        secure_view(GiveawayAnimationDataView.as_view()), 
+        name='animation-data'
+    ),
 ]
 
 # Sikkerhetsmerknad:
 # 1. Alle views som håndterer POST-data har CSRF-beskyttelse
 # 2. Giveaway-opprettelse krever innlogging
 # 3. Påmelding til giveaways er beskyttet med validering av lokasjon
+# 4. Admin-API for vinnermonitorering er kun tilgjengelig for stab

@@ -153,11 +153,12 @@ class Giveaway(models.Model):
     def get_correct_answer(self) -> Optional[str]:
         """Get the correct answer for the giveaway, if available.
         
-        In this simplified version, we assume the first option is correct.
-        In a real implementation, you would add a 'correct_answer' field.
+        Note: In the current implementation, there is no concept of correct answers.
+        All answers are considered as feedback/survey responses. This method is kept
+        for backward compatibility with existing code.
         
         Returns:
-            Optional[str]: The correct answer or None if no options
+            Optional[str]: The first answer option or None if no options
         """
         if self.signup_options and len(self.signup_options) > 0:
             return self.signup_options[0]
@@ -233,11 +234,14 @@ class Entry(models.Model):
         """
         Check if the user selected the correct answer.
         
+        Note: In the current implementation, there is no concept of correct answers.
+        All answers are considered as feedback/survey responses. This method is kept
+        for backward compatibility but always returns True.
+        
         Returns:
-            bool: True if the answer matches the giveaway's correct answer
+            bool: Always True since all answers are valid for the winner selection
         """
-        correct = self.giveaway.get_correct_answer()
-        return correct is not None and self.answer == correct
+        return True
         
     def clean(self) -> None:
         """
@@ -250,9 +254,18 @@ class Entry(models.Model):
         Raises:
             ValidationError: If validation fails
         """
-        if self.giveaway and self.giveaway.signup_options:
-            if self.answer not in self.giveaway.signup_options:
-                raise ValidationError({'answer': 'Svaret må være et av de tilgjengelige alternativene.'})
+        # Check if self.giveaway exists before accessing it
+        # This uses hasattr to avoid RelatedObjectDoesNotExist errors during form validation
+        # since the giveaway is set in the view after form validation
+        try:
+            giveaway = self.giveaway
+            if giveaway and giveaway.signup_options:
+                if self.answer not in giveaway.signup_options:
+                    raise ValidationError({'answer': 'Svaret må være et av de tilgjengelige alternativene.'})
+        except Exception:
+            # Skip giveaway validation during form validation
+            # The giveaway will be set in the view
+            pass
                 
         if not self.user_location_city or self.user_location_city.strip() == "":
             raise ValidationError({'user_location_city': 'Brukerlokasjon må oppgis.'})
@@ -331,15 +344,17 @@ class Winner(models.Model):
     
     def was_correct_answer(self) -> bool:
         """
-        Check if the winner selected the correct answer in their entry.
+        Check if the winner submitted an answer in their entry.
+        
+        Note: In the current implementation, there is no concept of correct answers.
+        All answers are considered as feedback/survey responses. This method is kept
+        for backward compatibility and returns True if an entry exists.
         
         Returns:
-            bool: True if the winner's answer was correct, False otherwise
+            bool: True if the winner has an entry, False otherwise
         """
         entry = self.get_entry()
-        if entry:
-            return entry.is_correct_answer()
-        return False
+        return entry is not None
     
     class Meta:
         """

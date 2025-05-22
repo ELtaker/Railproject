@@ -1,4 +1,6 @@
 from .permissions import can_enter_giveaway
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import IntegrityError
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect
@@ -12,7 +14,192 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from django.views.generic import ListView, DetailView
+# Admin task monitoring views and winner animation API
+
+from django.views.generic import ListView, DetailView, View
+from django.http import JsonResponse
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils.decorators import method_decorator
+from celery.result import AsyncResult
+
+
+class GiveawayAnimationDataView(View):
+    """
+    API view that provides entry data for the winner selection animation.
+    
+    This endpoint returns a JSON array of entry data (first name, last name)
+    for the specified giveaway. It only includes minimal required information
+    for the animation and follows privacy best practices.
+    """
+    
+    def get(self, request):
+        giveaway_id = request.GET.get('giveaway_id')
+        
+        if not giveaway_id:
+            return JsonResponse({
+                "error": "Missing giveaway_id parameter",
+                "message": "Please provide a giveaway_id parameter"
+            }, status=400)
+            
+        try:
+            # Get the giveaway
+            giveaway = Giveaway.objects.get(id=giveaway_id)
+            
+            # Check if user has permission to view this giveaway
+            if not self._can_view_giveaway(request.user, giveaway):
+                return JsonResponse({
+                    "error": "Permission denied",
+                    "message": "You don't have permission to view this giveaway's entries"
+                }, status=403)
+            
+            # Get entries for animation - limit fields to only what's needed
+            entries = giveaway.entries.all().select_related('user')
+            
+            # Format entries for animation
+            entry_data = [{
+                "id": entry.id,
+                "first_name": entry.user.first_name,
+                "last_name": entry.user.last_name,
+                # Include a partial (obfuscated) email for verification
+                "email_hint": self._obfuscate_email(entry.user.email)
+            } for entry in entries]
+            
+            return JsonResponse({
+                "giveaway": {
+                    "id": giveaway.id,
+                    "title": giveaway.title
+                },
+                "entries": entry_data,
+                "total_entries": len(entry_data)
+            })
+            
+        except Giveaway.DoesNotExist:
+            return JsonResponse({
+                "error": "Giveaway not found",
+                "message": f"No giveaway found with ID {giveaway_id}"
+            }, status=404)
+        except Exception as e:
+            logger.exception(f"Error getting animation data: {str(e)}")
+            return JsonResponse({
+                "error": "Server error",
+                "message": "An error occurred while retrieving animation data"
+            }, status=500)
+    
+    def _can_view_giveaway(self, user, giveaway):
+        """Check if user can view this giveaway's entries."""
+        # Business owners can view their own giveaways
+        if user.is_authenticated and hasattr(user, 'business_profile'):
+            return user.business_profile.business == giveaway.business
+        
+        # Staff/admin can view any giveaway
+        return user.is_staff or user.is_superuser
+    
+    def _obfuscate_email(self, email):
+        """Create a privacy-friendly version of the email."""
+        parts = email.split('@')
+        if len(parts) != 2:
+            return "***"
+            
+        username, domain = parts
+        if len(username) <= 2:
+            return f"{username[0]}***@{domain[0]}***"
+            
+        return f"{username[0:2]}***@{domain[0:2]}***"
+
+
+class WinnerAnimationView(DetailView):
+    """
+    View that displays the arcade claw machine animation for a giveaway winner.
+    
+    This view renders a template with the claw machine animation that visually
+    demonstrates the random selection process for a giveaway winner.
+    """
+    model = Giveaway
+    template_name = 'giveaways/winner_animation.html'
+    context_object_name = 'giveaway'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        giveaway = self.get_object()
+        
+        # Check if this giveaway has a winner
+        has_winner = hasattr(giveaway, 'winner')
+        context['has_winner'] = has_winner
+        
+        if has_winner:
+            winner = giveaway.winner
+            winner_entry = winner.get_entry()
+            
+            # Add winner data to context
+            context['winner'] = {
+                'first_name': winner.user.first_name,
+                'last_name': winner.user.last_name,
+                'selected_at': winner.selected_at,
+                'answer': winner_entry.answer if winner_entry else None
+            }
+        
+        return context
+
+
+class WinnerSelectionStatusView(View):
+    """
+    Admin view for checking the status of winner selection tasks.
+    
+    Provides a JSON API for monitoring long-running winner selection tasks.
+    This view is only accessible to staff members.
+    """
+    
+    @method_decorator(staff_member_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
+    def get(self, request):
+        task_id = request.GET.get('task_id')
+        
+        if not task_id:
+            return JsonResponse({
+                "error": "No task ID provided",
+                "message": "Please provide a task_id parameter"
+            }, status=400)
+            
+        # Get the task result
+        result = AsyncResult(task_id)
+        
+        # Prepare response data
+        data = {
+            "task_id": task_id,
+            "status": result.status,
+            "ready": result.ready(),
+            "successful": result.successful() if result.ready() else None,
+            "timestamp": str(timezone.now())
+        }
+        
+        # Add result data if available
+        if result.ready():
+            if result.successful():
+                # Get the actual result data
+                result_data = result.result
+                
+                # Include only safe data (not exposing any sensitive information)
+                safe_data = {
+                    "total_processed": result_data.get("total_processed", 0),
+                    "winners_selected": result_data.get("winners_selected", 0),
+                    "errors": result_data.get("errors", 0),
+                    "completed_at": result_data.get("completed_at", ""),
+                    "chunks_processed": result_data.get("chunks_processed", 0)
+                }
+                
+                # Add summary messages if available (limited to prevent large responses)
+                if "summary_messages" in result_data:
+                    safe_data["summary_messages"] = result_data["summary_messages"][:10]
+                    safe_data["has_more_messages"] = len(result_data.get("summary_messages", [])) > 10
+                
+                data["result"] = safe_data
+            else:
+                # Include error information
+                data["error"] = str(result.result)
+        
+        return JsonResponse(data)
 
 class GiveawayListView(ListView):
     """
@@ -318,36 +505,68 @@ class GiveawayDetailView(DetailView):
             )
             return redirect(self.object.get_absolute_url())
 
-        # Process form submission
+        # Process form submission with robust error handling
         form = EntryForm(**self.get_entry_form_kwargs(post=True))
-        if form.is_valid():
-            try:
-                # Create and save entry
-                entry = form.save(commit=False)
-                entry.user = user
-                entry.giveaway = self.object
-                entry.save()
-                
-                # Success message with toast notification
-                messages.success(
-                    request, 
-                    _('Du er nå påmeldt! Lykke til i trekningen.')
-                )
-                
-                # Log successful entry
-                logger.info(
-                    f"Bruker {user.email} meldte seg på giveaway {self.object.id} "
-                    f"fra {entry.user_location_city}."
-                )
-                
-                return redirect(self.object.get_absolute_url())
-            except Exception as e:
-                # Handle unexpected errors
-                logger.error(f"Feil ved lagring av påmelding: {str(e)}")
-                messages.error(
-                    request, 
-                    _('Det oppstod en feil ved påmelding. Vennligst prøv igjen.')
-                )
+        
+        # Critical fix: Pre-validate to check for errors before is_valid call
+        # This prevents RelatedObjectDoesNotExist errors
+        try:
+            if form.is_valid():
+                try:
+                    # Create entry instance but don't save to db yet
+                    entry = form.save(commit=False)
+                    # Set both required foreign keys
+                    entry.user = user
+                    entry.giveaway = self.object
+                    
+                    # Final validation check before saving
+                    # This validates the full model with all fields set
+                    entry.full_clean()
+                    
+                    # Now save the entry to the database
+                    entry.save()
+                    
+                    # Success message with toast notification
+                    messages.success(
+                        request, 
+                        _('Du er nå påmeldt! Lykke til i trekningen.')
+                    )
+                    
+                    # Log successful entry
+                    logger.info(
+                        f"Bruker {user.email} meldte seg på giveaway {self.object.id} "
+                        f"fra {entry.user_location_city}."
+                    )
+                    
+                    return redirect(self.object.get_absolute_url())
+                except ValidationError as ve:
+                    # Handle validation errors
+                    logger.warning(f"Valideringsfeil ved påmelding: {str(ve)}")
+                    for field, errors in ve.message_dict.items():
+                        for error in errors:
+                            form.add_error(field, error)
+                except IntegrityError:
+                    # Handle unique constraint violations (user already entered)
+                    logger.warning(f"Bruker {user.email} har allerede meldt seg på giveaway {self.object.id}")
+                    messages.error(
+                        request,
+                        _('Du har allerede meldt deg på denne giveawayen.')
+                    )
+                    return redirect(self.object.get_absolute_url())
+                except Exception as e:
+                    # Handle other unexpected errors
+                    logger.error(f"Feil ved lagring av påmelding: {str(e)}")
+                    messages.error(
+                        request, 
+                        _('Det oppstod en feil ved påmelding. Vennligst prøv igjen.')
+                    )
+        except Exception as form_error:
+            # Catch any exceptions during form validation
+            logger.error(f"Feil ved validering av skjema: {str(form_error)}")
+            messages.error(
+                request,
+                _('Det oppstod en feil ved validering av skjemaet. Vennligst prøv igjen.')
+            )
         else:
             # Form validation failed
             logger.warning(

@@ -32,8 +32,8 @@ ensure-unique-participation = true
 link-participation-to-member = true
 link-participation-to-giveaway = true
 store-selected-answer = true
-base-winner-selection-on-correct-answer = true
-implement-random-winner-from-correct = true
+base-winner-selection-on-correct-answer = false
+implement-random-winner-from-all-entries = true
 handle-winner-announcement = true
 
 # Testing Requirements

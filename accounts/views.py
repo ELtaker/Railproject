@@ -190,40 +190,60 @@ class BusinessRegisterView(FormView):
         business.save()
         return super().form_valid(form)
 
-class UserRegisterView(FormView):
-    """
-    View for registrering av nye medlemmer på Raildrops.
-    Viser registreringsskjema, validerer input og oppretter ny bruker.
-    """
-    template_name = "accounts/member_register.html"
-    form_class = UserRegistrationForm
-    success_url = reverse_lazy('accounts:dashboard')
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
+from django.utils.decorators import method_decorator
 
-    def form_valid(self, form):
-        from django.contrib.auth.models import Group
-        # Save user without committing to get the user instance
-        user = form.save(commit=False)
-        # Save the city from the form to the User model
-        user.city = form.cleaned_data.get('city', '')
-        # Now save the user with the city field
-        user.save()
-        
-        # Opprett MemberProfile with city
-        from .models import MemberProfile
-        MemberProfile.objects.create(
-            user=user,
-            city=form.cleaned_data.get('city', '')
-        )
-        
-        # Legg bruker i Medlem-gruppen
-        medlem_group, _ = Group.objects.get_or_create(name="Medlem")
-        user.groups.add(medlem_group)
-        
-        # Spesifiser backend for vanlige brukere
-        login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
-        logger.info(f"Bruker registrert: {user.username} ({user.email}) fra {user.city}")
-        messages.success(self.request, "Bruker registrert og innlogget!")
-        return redirect('accounts:dashboard')
+# Function-based view with explicit CSRF handling for member registration
+@ensure_csrf_cookie
+@csrf_protect
+def member_register_view(request):
+    """
+    Function-based view for registering new members on Raildrops.
+    Shows registration form, validates input, and creates new user.
+    Includes explicit CSRF handling with ensure_csrf_cookie and csrf_protect decorators.
+    """
+    if request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            from django.contrib.auth.models import Group
+            # Save user without committing to get the user instance
+            user = form.save(commit=False)
+            # Save the city from the form to the User model
+            user.city = form.cleaned_data.get('city', '')
+            # Now save the user with the city field
+            user.save()
+            
+            # Create MemberProfile with city
+            from .models import MemberProfile
+            MemberProfile.objects.create(
+                user=user,
+                city=form.cleaned_data.get('city', '')
+            )
+            
+            # Add user to Medlem group
+            medlem_group, _ = Group.objects.get_or_create(name="Medlem")
+            user.groups.add(medlem_group)
+            
+            # Specify backend for regular users
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            logger.info(f"User registered: {user.username} ({user.email}) from {user.city}")
+            messages.success(request, "User registered and logged in!")
+            return redirect('accounts:dashboard')
+    else:
+        form = UserRegistrationForm()
+    
+    # Add ARIA attributes to form fields for better accessibility
+    if hasattr(form, 'fields'):
+        for field in form.fields.values():
+            if hasattr(field.widget, 'attrs'):
+                field.widget.attrs.update({
+                    'class': 'form-control',
+                    'aria-required': 'true' if field.required else 'false'
+                })
+    
+    return render(request, 'accounts/member_register.html', {
+        'form': form,
+    })
 
 def member_login_view(request):
     """
