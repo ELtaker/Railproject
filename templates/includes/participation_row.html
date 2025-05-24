@@ -24,10 +24,24 @@
         {% endif %}
     </td>
     <td>
-        <a href="{% url 'giveaways:giveaway-detail' row.giveaway.pk %}" 
-           class="btn btn-outline-primary btn-sm"
-           aria-label="Se detaljer for {{ row.giveaway.title }}">
-            <i class="fa fa-info-circle" aria-hidden="true"></i> Detaljer
-        </a>
+        <div class="btn-group" role="group" aria-label="Handlinger for {{ row.giveaway.title }}">
+            <a href="{% url 'giveaways:giveaway-detail' row.giveaway.pk %}" 
+               class="btn btn-outline-primary btn-sm"
+               aria-label="Se detaljer for {{ row.giveaway.title }}">
+                <i class="fa fa-info-circle" aria-hidden="true"></i> Detaljer
+            </a>
+            {% if not row.giveaway.is_active and row.giveaway.has_winner %}
+                <a href="{% url 'giveaways:giveaway-winner' row.giveaway.pk %}" 
+                   class="btn btn-outline-warning btn-sm"
+                   aria-label="Se vinner for {{ row.giveaway.title }}">
+                    <i class="fa fa-trophy" aria-hidden="true"></i> Se vinner
+                </a>
+                <a href="{% url 'giveaways:winner-animation' row.giveaway.pk %}" 
+                   class="btn btn-outline-danger btn-sm"
+                   aria-label="Se premie-trekning for {{ row.giveaway.title }}">
+                    <i class="fa fa-gamepad" aria-hidden="true"></i> Se trekning
+                </a>
+            {% endif %}
+        </div>
     </td>
 </tr>

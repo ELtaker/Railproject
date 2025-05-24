@@ -116,3 +116,6 @@ body {
 input, select, textarea {
   border-radius: 0.4rem !important;
 }
+.navbar.navbar-expand-lg.sticky-top.bakgrunn-header {
+  background-color: blue !important;
+}

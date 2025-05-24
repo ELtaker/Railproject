@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vinner-trekning for {{ giveaway.title }} | Raildrops{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/arcade_animation.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="animation-wrapper">
+    <!-- Header with giveaway info -->
+    <div class="animation-header">
+        <h1>Premie-trekning: {{ giveaway.title }}</h1>
+        <p class="business-info">{{ business.name }} | {{ entries_count }} deltakere</p>
+    </div>
+    
+    <!-- Animation container -->
+    <div class="arcade-machine-container">
+        <!-- Loading overlay -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="spinner-border text-warning" role="status">
+                <span class="visually-hidden">Laster...</span>
+            </div>
+            <p>Laster animasjon...</p>
+        </div>
+        
+        <canvas id="arcadeCanvas" aria-label="Premie-trekning animasjon" role="img"></canvas>
+        <div class="avatar" id="vinnerNavn" aria-live="polite">
+            <h3></h3>
+        </div>
+    </div>
+    
+    <!-- Controls -->
+    <div class="animation-controls">
+        <button id="startButton" class="btn btn-warning btn-lg" aria-label="Start trekning animasjon">
+            <i class="fa fa-gamepad me-2" aria-hidden="true"></i> Start Trekning
+        </button>
+        <a href="{% url 'giveaways:giveaway-winner' giveaway.pk %}" class="btn btn-outline-primary btn-lg" aria-label="Tilbake til vinnerside">
+            <i class="fa fa-arrow-left me-2" aria-hidden="true"></i> Tilbake
+        </a>
+    </div>
+    
+    <!-- Winner info (hidden until revealed) -->
+    <div id="winnerInfoCard" class="winner-info-card">
+        {% if winner %}
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h2 class="h4 mb-0">Gratulerer til vinneren!</h2>
+            </div>
+            <div class="card-body text-center py-4">
+                <div class="display-1 text-warning mb-3">
+                    <i class="fa fa-trophy" aria-hidden="true"></i>
+                </div>
+                <h3 class="mb-2">{{ winner.user.get_full_name }}</h3>
+                {% if winner_entry.user_location_city %}
+                <p class="text-muted mb-4">
+                    <i class="fa fa-map-marker-alt me-1" aria-hidden="true"></i> {{ winner_entry.user_location_city }}
+                </p>
+                {% endif %}
+                <div class="alert alert-success">
+                    <p class="mb-0">Bedriften vil kontakte vinneren via epost for å avtale utlevering av premien.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Include anime.js for animations -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<script src="{% static 'js/arcade_animation.js' %}"></script>
+
+<script type="text/javascript">
+    // Safely wrapped JavaScript
+    (function() {
+        // Set defaults
+        var winnerName = '';
+        var participantList = [];
+        var winnerData = {};
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loading when assets are loaded
+            window.addEventListener('load', function() {
+                var loadingOverlay = document.getElementById('loadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.style.opacity = '0';
+                    setTimeout(function() {
+                        loadingOverlay.style.display = 'none';
+                    }, 500);
+                }
+            });
+            
+            // Keep winner info card hidden initially
+            var winnerCard = document.getElementById('winnerInfoCard');
+            if (winnerCard) {
+                winnerCard.style.display = 'none';
+                winnerCard.style.opacity = '0';
+            }
+            
+            // Handle custom start button
+            var startButton = document.getElementById('startButton');
+            if (startButton) {
+                startButton.addEventListener('click', function() {
+                    this.disabled = true;
+                    this.innerHTML = '<i class="fa fa-spinner fa-spin me-2" aria-hidden="true"></i> Trekning pågår...';
+                    
+                    // Start the animation
+                    startAnimation();
+                    
+                    // Enable button after animation completes
+                    setTimeout(function() {
+                        startButton.innerHTML = '<i class="fa fa-gamepad me-2" aria-hidden="true"></i> Spill igjen';
+                        startButton.disabled = false;
+                    }, 5000); // Adjust timing based on your animation duration
+                });
+            }
+            
+            {% if winner %}
+                // Set the winner name for the animation
+                winnerName = "{{ winner.user.get_full_name }}";
+                if (typeof setWinnerName === 'function') {
+                    setWinnerName(winnerName);
+                }
+                
+                // Create participant list for avatars
+                participantList = [];
+                {% for entry in entries %}
+                    participantList.push("{{ entry.user.get_full_name }}");
+                {% endfor %}
+                
+                if (typeof setParticipantList === 'function') {
+                    setParticipantList(participantList);
+                }
+                
+                // Set additional winner data if needed
+                winnerData = {
+                    name: "{{ winner.user.get_full_name }}",
+                    id: {{ winner.id }}
+                    {% if winner_entry.user_location_city %},
+                    city: "{{ winner_entry.user_location_city }}"
+                    {% endif %}
+                };
+            {% endif %}
+        });
+    })();
+</script>
+{% endblock %}

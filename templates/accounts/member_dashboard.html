@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% load static %}
-{% load cache %}
 {% load account_filters %}
 {% block title %}Dashboard | Raildrops{% endblock %}
 {% block content %}
@@ -18,47 +17,167 @@
         </div>
     </div>
     
-    <!-- Recent Participations -->
+    <!-- Active Giveaway Participations -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="h4 mb-0">Dine giveaways</h2>
-                {% if participations %}
-                <a href="#" class="btn btn-sm btn-outline-secondary" aria-label="Vis alle deltakelser">
-                    <i class="fa fa-list me-1" aria-hidden="true"></i> Se alle
-                </a>
-                {% endif %}
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">
+                        <i class="fa fa-certificate me-2" aria-hidden="true"></i> Aktive Giveaways
+                    </h2>
+                    <span class="badge bg-white text-success rounded-pill">
+                        {{ active_participations|default:0 }} aktive
+                    </span>
+                </div>
+                <div class="card-body">
+                    {% with active_participations=participations|filter_active_entries %}
+                        {% if active_participations %}
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Giveaway</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Deltok</th>
+                                            <th scope="col">Handlinger</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for participation in active_participations %}
+                                            <tr>
+                                                <td class="fw-semibold">{{ participation.giveaway.title }}</td>
+                                                <td><span class="badge bg-success">Aktiv</span></td>
+                                                <td>{{ participation.entered_at|date:"d.m.Y" }}</td>
+                                                <td>
+                                                    <a href="{% url 'giveaways:giveaway-detail' participation.giveaway.pk %}" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fa fa-info-circle" aria-hidden="true"></i> Detaljer
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info mb-0" role="alert">
+                                <i class="fa fa-info-circle me-2" aria-hidden="true"></i>
+                                Du har ingen aktive giveaways for øyeblikket. Finn giveaways i nærheten for å delta.
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </div>
             </div>
-            
-            {% cache 1800 user_participations_table user.id %}
-            {% with headers="Giveaway,Status,Deltok,Vunnet,Handlinger"|split:"," %}
-                {% if participations %}
-                    <!-- Desktop Table View (hidden on small screens) -->
-                    <div class="d-none d-md-block">
-                        {% include "includes/responsive_table.html" with 
-                            table_id="participations-table"
-                            caption="Dine deltakelser i giveaways"
-                            headers=headers
-                            rows=participations
-                            empty_message="Du har ikke deltatt i noen giveaways ennå. Finn aktive giveaways for å delta."
-                            row_template="includes/participation_row.html"
-                        %}
-                    </div>
-                    
-                    <!-- Mobile Card View (visible on small screens only) -->
-                    <div class="d-md-none mt-3">
-                        {% for participation in participations %}
-                            {% include "includes/participation_row_card.html" with row=participation %}
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="alert alert-info" role="alert">
-                        <i class="fa fa-info-circle me-2" aria-hidden="true"></i>
-                        Du har ikke deltatt i noen giveaways ennå. Finn aktive giveaways for å delta.
-                    </div>
-                {% endif %}
-            {% endwith %}
-            {% endcache %}
+        </div>
+    </div>
+    
+    <!-- Recent Finished Giveaways -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">
+                        <i class="fa fa-trophy me-2" aria-hidden="true"></i> Recent Giveaways
+                    </h2>
+                    {% with recent_finished=participations|filter_recent_finished_entries:5 %}
+                        <span class="badge bg-white text-secondary rounded-pill">
+                            {{ recent_finished|default:0|length }} avsluttet
+                        </span>
+                    {% endwith %}
+                </div>
+                <div class="card-body">
+                    {% with recent_finished=participations|filter_recent_finished_entries:5 %}
+                        {% if recent_finished %}
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Giveaway</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Deltok</th>
+                                            <th scope="col">Handlinger</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for participation in recent_finished %}
+                                            <tr>
+                                                <td class="fw-semibold">{{ participation.giveaway.title }}</td>
+                                                <td><span class="badge bg-secondary">Avsluttet</span></td>
+                                                <td>{{ participation.entered_at|date:"d.m.Y" }}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group" aria-label="Handlinger for {{ participation.giveaway.title }}">
+                                                        <a href="{% url 'giveaways:giveaway-detail' participation.giveaway.pk %}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fa fa-info-circle" aria-hidden="true"></i> Detaljer
+                                                        </a>
+                                                        {% if participation.giveaway.has_winner %}
+                                                            <a href="{% url 'giveaways:giveaway-winner' participation.giveaway.pk %}" 
+                                                               class="btn btn-sm btn-outline-warning"
+                                                               aria-label="Se premie-trekning for {{ participation.giveaway.title }}">
+                                                                <i class="fa fa-trophy" aria-hidden="true"></i> Se premie-trekning
+                                                            </a>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info mb-0" role="alert">
+                                <i class="fa fa-info-circle me-2" aria-hidden="true"></i>
+                                Du har ingen nylig avsluttede giveaways. Delta i flere giveaways for å se resultater her.
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- All Participations -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">
+                        <i class="fa fa-history me-2" aria-hidden="true"></i> Alle Deltakelser
+                    </h2>
+                    {% if participations %}
+                    <a href="#" class="btn btn-sm btn-outline-secondary" aria-label="Vis alle deltakelser">
+                        <i class="fa fa-list me-1" aria-hidden="true"></i> Se alle
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% with headers="Giveaway,Status,Deltok,Vunnet,Handlinger"|split:"," %}
+                        {% if participations %}
+                            <!-- Desktop Table View (hidden on small screens) -->
+                            <div class="d-none d-md-block">
+                                {% include "includes/responsive_table.html" with 
+                                    table_id="participations-table"
+                                    caption="Dine deltakelser i giveaways"
+                                    headers=headers
+                                    rows=participations
+                                    empty_message="Du har ikke deltatt i noen giveaways ennå. Finn aktive giveaways for å delta."
+                                    row_template="includes/participation_row.html"
+                                %}
+                            </div>
+                            
+                            <!-- Mobile Card View (visible on small screens only) -->
+                            <div class="d-md-none mt-3">
+                                {% for participation in participations %}
+                                    {% include "includes/participation_row_card.html" with row=participation %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info" role="alert">
+                                <i class="fa fa-info-circle me-2" aria-hidden="true"></i>
+                                Du har ikke deltatt i noen giveaways ennå. Finn aktive giveaways for å delta.
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
         </div>
     </div>
     

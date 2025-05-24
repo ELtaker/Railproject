@@ -1,5 +1,6 @@
 # In accounts/templatetags/account_filters.py
 from django import template
+from django.utils import timezone
 from datetime import datetime, timedelta
 
 register = template.Library()
@@ -29,6 +30,43 @@ def format_datetime_since(value):
     """
     if not value:
         return ''
+
+@register.filter
+def filter_active_entries(entries):
+    """
+    Filter a queryset or list of entries to only include those with active giveaways.
+    
+    Usage: {{ participations|filter_active_entries }}
+    Returns: A list of participations with active giveaways
+    """
+    if not entries:
+        return []
+    
+    # Filter to only include active giveaways
+    active_entries = [entry for entry in entries if entry.giveaway.is_active]
+    
+    return active_entries
+
+@register.filter
+def filter_recent_finished_entries(entries, max_count=5):
+    """
+    Filter a queryset or list of entries to only include those with recently finished giveaways.
+    
+    Usage: {{ participations|filter_recent_finished_entries:5 }}
+    Returns: A list of up to 5 most recent participations with finished giveaways
+    """
+    if not entries:
+        return []
+    
+    # Filter to only include finished giveaways
+    finished_entries = [entry for entry in entries if not entry.giveaway.is_active]
+    
+    # Sort by giveaway end date (most recent first) and limit to max_count
+    sorted_entries = sorted(finished_entries, 
+                          key=lambda entry: entry.giveaway.end_date if hasattr(entry.giveaway, 'end_date') else entry.entered_at, 
+                          reverse=True)
+    
+    return sorted_entries[:max_count]
         
     now = datetime.now()
     if hasattr(value, 'tzinfo') and value.tzinfo:

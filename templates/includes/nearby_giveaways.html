@@ -10,9 +10,6 @@
   %}
 -->
 {% endcomment %}
-
-{% load cache %}
-{% cache 1800 user_nearby_giveaways user.id %}
 <div class="card shadow-sm border-0 mt-4 mb-4">
     <div class="card-header bg-light d-flex justify-content-between align-items-center">
         <h2 class="h5 mb-0">Giveaways i nærheten</h2>
@@ -108,4 +105,3 @@
         {% endif %}
     </div>
 </div>
-{% endcache %}

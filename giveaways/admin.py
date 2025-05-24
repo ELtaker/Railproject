@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 @admin.register(Giveaway)
 class GiveawayAdmin(admin.ModelAdmin):
     list_display = (
-        'title', 'business_name', 'status_badge', 'prize_value', 
+        'title', 'business_name', 'get_location', 'status_badge', 'prize_value', 
         'entries_count', 'start_date', 'end_date', 'has_winner'
     )
     list_display_links = ('title',)
@@ -49,6 +49,25 @@ class GiveawayAdmin(admin.ModelAdmin):
             url = reverse('admin:businesses_business_change', args=[obj.business.id])
             return format_html('<a href="{}">{}</a>', url, obj.business.name)
         return '-'
+        
+    def get_location(self, obj):
+        """Display business location (city) for the giveaway
+        
+        This helps admins see at a glance where each giveaway is located
+        without changing the database structure, as location is stored
+        on the related Business model.
+        
+        Args:
+            obj: The Giveaway instance
+            
+        Returns:
+            str: The business city or a placeholder if not available
+        """
+        if obj.business and obj.business.city:
+            return obj.business.city
+        return '-'
+    get_location.short_description = _('Location')
+    get_location.admin_order_field = 'business__city'
     business_name.short_description = _('Bedrift')
     business_name.admin_order_field = 'business__name'
     

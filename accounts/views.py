@@ -314,7 +314,7 @@ def dashboard_view(request):
             # Use select_related to reduce database queries
             participations = Entry.objects.filter(user=user)\
                 .select_related('giveaway', 'giveaway__business')\
-                .order_by('-created_at')
+                .order_by('-entered_at')
             
             # Get nearby giveaways if user has location
             nearby_giveaways = []

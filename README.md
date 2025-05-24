@@ -24,7 +24,11 @@ Raildrops is a modular Django 5.2 web application for managing location-based gi
 - **Location-Based Participation:** Members must be in the same city as the business to participate
 - **Question & Answer Validation:** Customizable questions with answer validation
 - **Geolocation Integration:** Browser-based geolocation with OpenStreetMap reverse geocoding
-- **Scalable Winner Selection:** Random winner selection system with visual arcade claw animation
+- **Interactive Winner Selection:** Engaging arcade claw machine animation with particle effects
+- **Event-Driven Animation System:** Custom event architecture for animation state management
+- **Responsive Animation:** Optimized canvas rendering that adapts to all screen sizes
+- **Accessibility-Enhanced Animations:** ARIA attributes and keyboard navigation for animations
+- **Winner Celebration Effects:** Confetti and visual feedback for winner announcements
 - **Asynchronous Processing:** Background task processing for winner selection with Celery
 - **Business Giveaway Dashboard:** Enhanced interface for businesses to manage their giveaways
 - **Status-Based Filtering:** Filter giveaways by active, upcoming, or ended status
@@ -51,6 +55,8 @@ Raildrops is a modular Django 5.2 web application for managing location-based gi
 
 - **Backend:** Django 5.2
 - **Frontend:** Bootstrap 5, HTML5, CSS3, JavaScript
+- **Animation Libraries:** anime.js for smooth animations and transitions
+- **Canvas Graphics:** HTML5 Canvas API for custom drawing and animations
 - **Database:** SQLite (development), PostgreSQL/MySQL (production)
 - **Authentication:** Django's built-in auth with email backend
 - **Geolocation:** HTML5 Geolocation API with OpenStreetMap Nominatim
@@ -84,7 +90,15 @@ raildrops/
 │   ├── forms.py           # Giveaway creation and participation forms
 │   ├── models.py          # Giveaway, Entry, and Winner models
 │   ├── permissions.py     # Access control helpers
-│   ├── services.py        # Business logic and validation
+│   ├── services/          # Business logic and validation services
+│   │   ├── __init__.py    # Service module initialization
+│   │   ├── winners.py     # Winner selection logic
+│   │   └── validation.py  # Participation validation services
+│   ├── static/            # Giveaway-specific static assets
+│   │   ├── js/            # JavaScript for animations and interactions
+│   │   │   └── arcade_animation.js  # Claw machine animation system
+│   │   └── css/           # Giveaway-specific styles
+│   │       └── arcade_animation.css # Animation styling
 │   ├── urls.py            # URL patterns for giveaways
 │   └── views.py           # Giveaway views and form processing
 ├── notifications/         # Notification system
@@ -398,9 +412,55 @@ Updated `requirements.txt` with the following packages:
 - `django-environ` for better environment variable management
 - Various optimization and testing libraries
 
+## Animation System
+
+Raildrops features an engaging arcade claw machine animation for winner selection, providing an interactive and visually appealing experience.
+
+### Animation Architecture
+
+- **Modular Design:** Separated into canvas rendering, animation logic, and event handling
+- **Event-Driven System:** Custom events for animation states (start, winner revealed, completed)
+- **Particle Effects:** Confetti celebration effects when winners are revealed
+- **Optimized Performance:** Efficient canvas rendering with requestAnimationFrame
+- **Responsive Canvas:** Automatically adjusts to screen size with high-DPI support
+- **Accessibility:** ARIA live regions announce winner information for screen readers
+
+### Animation Integration
+
+```javascript
+// Core animation object with configurable parameters
+const ArcadeAnimation = {
+    // Configuration settings
+    config: {
+        avatarCount: 8,           // Number of participant avatars
+        animationDuration: 4000,  // Total animation time in ms
+        particleCount: 30,        // Number of confetti particles
+        // Additional configuration options...
+    },
+    
+    // Animation methods
+    init() { /* Initialize the animation */ },
+    startAnimation() { /* Begin the animation sequence */ },
+    createAnimationTimeline() { /* Set up the animation steps */ },
+    revealWinner() { /* Display the winner with effects */ }
+    // Additional methods...
+};
+```
+
+### User Experience Flow
+
+1. User visits the winner page for a completed giveaway
+2. User clicks the "See prize drawing" button
+3. Animation page loads with arcade machine interface
+4. User clicks "Start Drawing" to initiate the animation
+5. Claw moves randomly, then selects a winner avatar
+6. Winner is revealed with confetti effects and celebration
+7. Winner info card appears with complete details
+8. User can restart the animation or return to results page
+
 ## Troubleshooting
 
-### Common Issues and Solutions
+### Common Issues & Solutions
 
 #### Problem: Location Detection Issues
 **Symptoms:**

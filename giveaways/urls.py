@@ -20,7 +20,7 @@ from django.contrib.auth.decorators import login_required
 
 from .views import (GiveawayCreateView, GiveawayListView, GiveawayDetailView,
                   BusinessGiveawayListView, GiveawayEditView, WinnerSelectionStatusView,
-                  GiveawayAnimationDataView, WinnerAnimationView)
+                  GiveawayAnimationDataView, WinnerAnimationView, GiveawayWinnerView)
 from .permissions import is_member, can_enter_giveaway
 
 app_name = 'giveaways'
@@ -78,6 +78,13 @@ urlpatterns = [
         '<int:pk>/winner-animation/', 
         secure_view(WinnerAnimationView.as_view()), 
         name='winner-animation'
+    ),
+    
+    # ===== Giveaway Winner Detail View =====
+    path(
+        '<int:pk>/winner/', 
+        secure_view(GiveawayWinnerView.as_view()), 
+        name='giveaway-winner'
     ),
     
     # ===== API endpoint for animation data =====

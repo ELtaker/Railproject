@@ -108,6 +108,8 @@ class BusinessRegistrationForm(forms.ModelForm):
                 # Sett username til e-post hvis ikke satt
                 if not user.username:
                     user.username = self.cleaned_data['email']
+                # Set the city on the User model as well
+                user.city = self.cleaned_data['city']
                 if commit:
                     user.save()
                     business = Business(

@@ -130,6 +130,8 @@ class Giveaway(models.Model):
         Returns:
             bool: True if current time is past end_date
         """
+        if not self.end_date:
+            return False
         return timezone.now() > self.end_date
     
     def is_upcoming(self) -> bool:
@@ -138,6 +140,8 @@ class Giveaway(models.Model):
         Returns:
             bool: True if current time is before start_date
         """
+        if not self.start_date:
+            return False
         return timezone.now() < self.start_date
     
     def is_currently_active(self) -> bool:
@@ -146,6 +150,9 @@ class Giveaway(models.Model):
         Returns:
             bool: True if giveaway is active and within start/end dates
         """
+        if not self.start_date or not self.end_date:
+            return False
+            
         now = timezone.now()
         return (self.is_active and 
                 self.start_date <= now <= self.end_date)
@@ -171,6 +178,31 @@ class Giveaway(models.Model):
             int: Count of entries
         """
         return self.entries.count()
+    
+    @property
+    def has_winner(self) -> bool:
+        """Check if this giveaway has a winner.
+        
+        Returns:
+            bool: True if a winner has been selected for this giveaway
+        """
+        try:
+            return hasattr(self, 'winner') and self.winner is not None
+        except Exception:
+            return False
+            
+    def get_winner_display_url(self) -> str:
+        """Get the URL for displaying the winner details.
+        
+        Returns:
+            str: URL to the winner page or detail page if no dedicated page exists
+        """
+        try:
+            if self.has_winner:
+                return reverse('giveaways:giveaway-winner', args=[str(self.id)])
+            return self.get_absolute_url()
+        except Exception:
+            return self.get_absolute_url()
         
     class Meta:
         """Meta options for the Giveaway model."""

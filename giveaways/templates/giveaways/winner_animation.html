@@ -107,468 +107,182 @@
         </ol>
     </nav>
     
-    <div class="row">
-        <div class="col-md-12">
-            <h1 class="mb-4">
-                {% trans "Winner Selection" %}: {{ giveaway.title }}
-            </h1>
-            
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h2>{% trans "Giveaway Information" %}</h2>
-                    <p><strong>{% trans "Business" %}:</strong> {{ giveaway.business.name }}</p>
-                    <p><strong>{% trans "Location" %}:</strong> {{ giveaway.business.city }}</p>
-                    <p><strong>{% trans "Ended" %}:</strong> {{ giveaway.end_date }}</p>
+    <div class="animation-wrapper">
+        <!-- Header with giveaway info -->
+        <div class="animation-header">
+            <h1>{% trans "Winner Selection" %}: {{ giveaway.title }}</h1>
+            <p class="business-info">{{ giveaway.business.name }} | {{ entries_count }} {% trans "participants" %}</p>
+        </div>
+        
+        <!-- Animation container -->
+        <div class="arcade-machine-container">
+            <!-- Loading overlay -->
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="spinner-border text-warning" role="status">
+                    <span class="visually-hidden">{% trans "Loading..." %}</span>
                 </div>
+                <p>{% trans "Loading animation..." %}</p>
             </div>
             
-            {% if has_winner %}
-                <div class="winner-announcement" role="alert" aria-live="polite">
-                    <h2 class="h3">{% trans "Congratulations!" %}</h2>
-                    <p class="winner-name">{{ winner.first_name }} {{ winner.last_name }}</p>
-                    <p>{% trans "Has been selected as the winner!" %}</p>
-                    <p><small>{% trans "Selected at" %}: {{ winner.selected_at }}</small></p>
+            <canvas id="arcadeCanvas" aria-label="{% trans 'Prize draw animation' %}" role="img"></canvas>
+            <div class="avatar" id="vinnerNavn" aria-live="polite">
+                <h3></h3>
+            </div>
+        </div>
+        
+        <!-- Controls -->
+        <div class="animation-controls">
+            <button id="startButton" class="btn btn-warning btn-lg" aria-label="{% trans 'Start draw animation' %}">
+                <i class="fa fa-gamepad me-2" aria-hidden="true"></i> {% trans "Start Selection" %}
+            </button>
+            <a href="{% url 'giveaways:giveaway-winner' giveaway.pk %}" class="btn btn-outline-primary btn-lg" aria-label="{% trans 'Back to winner page' %}">
+                <i class="fa fa-arrow-left me-2" aria-hidden="true"></i> {% trans "Back" %}
+            </a>
+        </div>
+        
+        <!-- Winner info (hidden until revealed) -->
+        <div id="winnerInfoCard" class="winner-info-card">
+            {% if winner %}
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h2 class="h4 mb-0">{% trans "Congratulations to the winner!" %}</h2>
                 </div>
-                
-                <div class="text-center mb-4">
-                    <button id="replay-animation" class="btn btn-primary">
-                        <i class="fas fa-redo me-2"></i>{% trans "Replay Animation" %}
-                    </button>
-                </div>
-            {% endif %}
-            
-            <div class="animation-container">
-                <div id="loading-spinner" class="loading-spinner">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="sr-only">{% trans "Loading animation..." %}</span>
+                <div class="card-body text-center py-4">
+                    <div class="display-1 text-warning mb-3">
+                        <i class="fa fa-trophy" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="mb-2">{{ winner.user.get_full_name }}</h3>
+                    {% if winner_entry.user_location_city %}
+                    <p class="text-muted mb-4">
+                        <i class="fa fa-map-marker-alt me-1" aria-hidden="true"></i> {{ winner_entry.user_location_city }}
+                    </p>
+                    {% endif %}
+                    <div class="alert alert-success">
+                        <p class="mb-0">{% trans "The business will contact the winner via email to arrange prize delivery." %}</p>
                     </div>
                 </div>
-                <canvas id="claw-canvas" class="claw-canvas" aria-label="{% trans 'Claw machine animation for winner selection' %}"></canvas>
             </div>
-            
-            <div class="animation-controls">
-                <button id="start-animation" class="btn btn-primary">
-                    <i class="fas fa-play me-2"></i>{% trans "Start Selection" %}
-                </button>
-                <button id="skip-animation" class="btn btn-outline-secondary">
-                    <i class="fas fa-forward me-2"></i>{% trans "Skip to Result" %}
-                </button>
-            </div>
-            
-            <div class="mt-4" id="animation-status" aria-live="polite">
-                <p class="text-center">{% trans "Click Start Selection to begin the winner selection process!" %}</p>
-            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 {% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/arcade_animation.css' %}">
+{% endblock %}
+
 {% block extra_js %}
+<!-- Include anime.js for animations -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<script src="{% static 'js/arcade_animation.js' %}"></script>
+
 <script>
-    // Winner Animation using HTML5 Canvas
     document.addEventListener('DOMContentLoaded', function() {
-        const canvas = document.getElementById('claw-canvas');
-        const ctx = canvas.getContext('2d');
-        const loadingSpinner = document.getElementById('loading-spinner');
-        const startButton = document.getElementById('start-animation');
-        const skipButton = document.getElementById('skip-animation');
-        const replayButton = document.getElementById('replay-animation');
-        const animationStatus = document.getElementById('animation-status');
+        // Get DOM elements
+        const arcadeCanvas = document.getElementById('arcadeCanvas');
+        const startButton = document.getElementById('startButton');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const winnerNameElement = document.getElementById('vinnerNavn');
+        const winnerCard = document.getElementById('winnerInfoCard');
         
-        // Animation state
-        let entries = [];
-        let selectedEntry = null;
-        let animationStarted = false;
-        let animationComplete = false;
-        let clawX = 0;
-        let clawY = 0;
-        let targetX = 0;
-        let targetY = 0;
-        let clawClosed = false;
-        let clawMovingDown = false;
-        let clawMovingUp = false;
-        let clawWithEntry = false;
-        let entryPositions = [];
+        // Animation state variables
+        let participants = [];
+        let winner = null;
+        let animationInProgress = false;
         
-        // Claw machine colors
-        const colors = {
-            machine: '#3b5998',
-            claw: '#cc0000',
-            background: '#f8f9fa',
-            text: '#212529'
-        };
-        
-        // Set canvas dimensions
-        function resizeCanvas() {
-            const container = canvas.parentElement;
-            canvas.width = container.clientWidth;
-            canvas.height = 500;
-        }
-        
-        // Initialize canvas
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        
-        // Load entry data from API
-        async function loadEntryData() {
+        // Prepare participant data
+        async function loadParticipantData() {
             try {
-                const response = await fetch(`{% url 'giveaways:animation-data' %}?giveaway_id={{ giveaway.id }}`);
+                // Use the Django API endpoint to get participant data
+                const response = await fetch('{% url "giveaways:animation-data" %}?giveaway_id={{ giveaway.id }}');
                 const data = await response.json();
                 
                 if (data.error) {
-                    showError(data.message || 'Error loading entry data');
+                    console.error('Error loading participant data:', data.message);
                     return;
                 }
                 
-                entries = data.entries;
+                participants = data.entries || [];
                 
-                // Position entries randomly in the machine
-                positionEntries();
-                
-                // Hide loading spinner and show canvas
-                loadingSpinner.style.display = 'none';
-                canvas.style.display = 'block';
-                
-                // Draw initial state
-                drawClawMachine();
-                
-                {% if has_winner %}
-                // If we already have a winner, pre-select them
-                selectedEntry = entries.find(function(entry) {
-                    return entry.first_name === "{{ winner.first_name }}" && 
-                           entry.last_name === "{{ winner.last_name }}";
-                });
+                // Find pre-selected winner if available
+                {% if winner %}
+                winner = {
+                    name: "{{ winner.user.get_full_name }}"
+                };
                 {% endif %}
                 
-            } catch (error) {
-                console.error('Error loading entry data:', error);
-                showError('Failed to load entry data. Please try again.');
-            }
-        }
-        
-        // Position entries randomly in the machine
-        function positionEntries() {
-            entryPositions = [];
-            
-            // Calculate how many entries can fit in a row
-            const entryWidth = 80;
-            const entryHeight = 40;
-            const padding = 10;
-            const machineWidth = canvas.width - 60;
-            const machineHeight = canvas.height - 160;
-            
-            const entriesPerRow = Math.floor(machineWidth / (entryWidth + padding));
-            
-            // Position entries in a grid with slight randomness
-            entries.forEach((entry, index) => {
-                const row = Math.floor(index / entriesPerRow);
-                const col = index % entriesPerRow;
+                // Prepare participant names for animation
+                const participantNames = participants.map(entry => 
+                    `${entry.first_name} ${entry.last_name}`
+                );
                 
-                const baseX = 30 + col * (entryWidth + padding) + (Math.random() * padding - padding/2);
-                const baseY = 80 + row * (entryHeight + padding) + (Math.random() * padding - padding/2);
-                
-                entryPositions.push({
-                    x: baseX,
-                    y: baseY,
-                    width: entryWidth,
-                    height: entryHeight,
-                    entry: entry
-                });
-            });
-        }
-        
-        // Draw the claw machine with entries
-        function drawClawMachine() {
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw machine background
-            ctx.fillStyle = colors.background;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw machine border
-            ctx.strokeStyle = colors.machine;
-            ctx.lineWidth = 6;
-            ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
-            
-            // Draw machine top
-            ctx.fillStyle = colors.machine;
-            ctx.fillRect(20, 20, canvas.width - 40, 50);
-            
-            // Draw entries
-            entryPositions.forEach(pos => {
-                if (clawWithEntry && selectedEntry && pos.entry.id === selectedEntry.id) {
-                    return; // Don't draw the selected entry in its original position
-                }
-                
-                ctx.fillStyle = '#e6f7ff';
-                ctx.strokeStyle = '#0d6efd';
-                ctx.lineWidth = 2;
-                
-                // Draw entry background
-                ctx.fillRect(pos.x, pos.y, pos.width, pos.height);
-                ctx.strokeRect(pos.x, pos.y, pos.width, pos.height);
-                
-                // Draw entry text
-                ctx.fillStyle = colors.text;
-                ctx.font = '12px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                
-                const name = `${pos.entry.first_name} ${pos.entry.last_name.charAt(0)}.`;
-                ctx.fillText(name, pos.x + pos.width/2, pos.y + pos.height/2);
-            });
-            
-            // Draw claw
-            drawClaw();
-        }
-        
-        // Draw the claw at its current position
-        function drawClaw() {
-            ctx.strokeStyle = colors.claw;
-            ctx.lineWidth = 4;
-            
-            // Draw claw cable
-            ctx.beginPath();
-            ctx.moveTo(canvas.width / 2, 20);
-            ctx.lineTo(clawX, clawY - 30);
-            ctx.stroke();
-            
-            // Draw claw base
-            ctx.beginPath();
-            ctx.arc(clawX, clawY - 15, 15, 0, Math.PI * 2);
-            ctx.fillStyle = '#888';
-            ctx.fill();
-            ctx.stroke();
-            
-            // Draw claw arms
-            const openingAngle = clawClosed ? 0.3 : 0.8;
-            
-            // Left arm
-            ctx.beginPath();
-            ctx.moveTo(clawX, clawY - 15);
-            ctx.lineTo(clawX - 20 * openingAngle, clawY + 20);
-            ctx.stroke();
-            
-            // Right arm
-            ctx.beginPath();
-            ctx.moveTo(clawX, clawY - 15);
-            ctx.lineTo(clawX + 20 * openingAngle, clawY + 20);
-            ctx.stroke();
-            
-            // Draw selected entry if the claw has grabbed it
-            if (clawWithEntry && selectedEntry) {
-                ctx.fillStyle = '#e6f7ff';
-                ctx.strokeStyle = '#0d6efd';
-                ctx.lineWidth = 2;
-                
-                // Draw entry background
-                ctx.fillRect(clawX - 40, clawY, 80, 40);
-                ctx.strokeRect(clawX - 40, clawY, 80, 40);
-                
-                // Draw entry text
-                ctx.fillStyle = colors.text;
-                ctx.font = '12px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                
-                const name = selectedEntry.first_name + ' ' + selectedEntry.last_name.charAt(0) + '.';
-                ctx.fillText(name, clawX, clawY + 20);
-            }
-        }
-        
-        // Run the animation
-        function animate() {
-            if (!animationStarted) return;
-            
-            drawClawMachine();
-            
-            if (clawMovingDown) {
-                // Move claw down
-                clawY += 3;
-                
-                // Check if claw reached target position
-                if (clawY >= targetY) {
-                    clawMovingDown = false;
-                    clawClosed = true;
+                // Initialize the arcade animation
+                if (typeof ArcadeAnimation !== 'undefined') {
+                    // Initialize animation
+                    ArcadeAnimation.init();
                     
-                    // Check if claw grabbed an entry
-                    entryPositions.forEach(pos => {
-                        if (
-                            clawX >= pos.x && clawX <= pos.x + pos.width &&
-                            clawY >= pos.y && clawY <= pos.y + pos.height
-                        ) {
-                            selectedEntry = pos.entry;
-                            clawWithEntry = true;
-                            
-                            // Update status
-                            animationStatus.innerHTML = `<p class="text-center">Selected: ${selectedEntry.first_name} ${selectedEntry.last_name}</p>`;
+                    // Set winner name if available
+                    if (winner) {
+                        ArcadeAnimation.setWinnerName(winner.name);
+                    }
+                    
+                    // Set participants list
+                    ArcadeAnimation.setParticipantList(participantNames);
+                    
+                    // Hide loading overlay after initialization
+                    setTimeout(() => {
+                        if (loadingOverlay) {
+                            loadingOverlay.style.opacity = '0';
+                            setTimeout(() => {
+                                loadingOverlay.style.display = 'none';
+                            }, 500);
                         }
-                    });
-                    
-                    // If no entry selected, pick one randomly
-                    if (!selectedEntry && entries.length > 0) {
-                        const randomIndex = Math.floor(Math.random() * entries.length);
-                        selectedEntry = entries[randomIndex];
-                        clawWithEntry = true;
-                        
-                        // Update status
-                        animationStatus.innerHTML = `<p class="text-center">Selected: ${selectedEntry.first_name} ${selectedEntry.last_name}</p>`;
-                    }
-                    
-                    // Start moving back up
-                    clawMovingUp = true;
-                    
-                    // Play grab sound
-                    playSound('grab');
+                    }, 1000);
                 }
-            } else if (clawMovingUp) {
-                // Move claw up with the selected entry
-                clawY -= 2;
-                
-                // Check if claw reached the top
-                if (clawY <= 70) {
-                    clawMovingUp = false;
-                    
-                    // Move to drop position
-                    targetX = canvas.width / 2;
-                    
-                    // If claw is far from drop position, move horizontally
-                    if (Math.abs(clawX - targetX) > 5) {
-                        const dx = targetX - clawX;
-                        clawX += dx * 0.05;
-                    } else {
-                        // Drop the entry
-                        animationComplete = true;
-                        
-                        // Show winner announcement
-                        showWinner();
-                        
-                        // Play win sound
-                        playSound('win');
-                    }
-                }
-            } else if (!animationComplete) {
-                // Move claw horizontally toward target
-                const dx = targetX - clawX;
-                clawX += dx * 0.05;
-                
-                // If close enough to target, start moving down
-                if (Math.abs(dx) < 5 && !clawMovingDown && !clawMovingUp) {
-                    clawMovingDown = true;
-                    
-                    // Play move sound
-                    playSound('move');
-                }
-            }
-            
-            // Continue animation
-            if (!animationComplete) {
-                requestAnimationFrame(animate);
+            } catch (error) {
+                console.error('Error fetching participant data:', error);
             }
         }
         
-        // Start the animation
-        function startAnimation() {
-            if (animationStarted) return;
+        // Set up event listeners for animation events
+        if (arcadeCanvas) {
+            // Listen for animation start
+            arcadeCanvas.addEventListener('arcade:animationStart', function(event) {
+                animationInProgress = true;
+                if (startButton) {
+                    startButton.disabled = true;
+                    startButton.innerHTML = '<i class="fa fa-spinner fa-spin me-2" aria-hidden="true"></i> {% trans "Drawing in progress..." %}';
+                }
+            });
             
-            // Reset animation state
-            clawX = canvas.width / 2;
-            clawY = 70;
-            clawClosed = false;
-            clawMovingDown = false;
-            clawMovingUp = false;
-            clawWithEntry = false;
-            selectedEntry = null;
-            animationComplete = false;
+            // Listen for winner revealed
+            arcadeCanvas.addEventListener('arcade:winnerRevealed', function(event) {
+                console.log('Winner revealed:', event.detail.winner);
+                // Any additional actions when winner is revealed
+            });
             
-            // Disable start button
-            startButton.disabled = true;
-            
-            // Pick a random target
-            const randomPos = entryPositions[Math.floor(Math.random() * entryPositions.length)];
-            targetX = randomPos.x + randomPos.width / 2;
-            targetY = randomPos.y + randomPos.height / 2;
-            
-            // Start animation
-            animationStarted = true;
-            animate();
-            
-            // Update status
-            animationStatus.innerHTML = `<p class="text-center">Selecting a winner...</p>`;
-            
-            // Play start sound
-            playSound('start');
-        }
-        
-        // Skip to the result
-        function skipToResult() {
-            if (!animationStarted || animationComplete) return;
-            
-            // Force animation to complete
-            animationComplete = true;
-            
-            // If no entry selected, pick one randomly
-            if (!selectedEntry && entries.length > 0) {
-                const randomIndex = Math.floor(Math.random() * entries.length);
-                selectedEntry = entries[randomIndex];
-                clawWithEntry = true;
-            }
-            
-            // Show winner
-            showWinner();
-            
-            // Play win sound
-            playSound('win');
-        }
-        
-        // Show the winner announcement
-        function showWinner() {
-            if (!selectedEntry) return;
-            
-            // Create winner announcement
-            const winnerHtml = '<div class="winner-announcement" role="alert">' +
-                '<h2 class="h3">Congratulations!</h2>' +
-                '<p class="winner-name">' + selectedEntry.first_name + ' ' + selectedEntry.last_name + '</p>' +
-                '<p>Has been selected as the winner!</p>' +
-            '</div>';
-            
-            animationStatus.innerHTML = winnerHtml;
-            
-            // Enable start button for replay
-            startButton.disabled = false;
-            startButton.innerHTML = '<i class="fas fa-redo me-2"></i>Replay';
-        }
-        
-        // Show error message
-        function showError(message) {
-            loadingSpinner.style.display = 'none';
-            animationStatus.innerHTML = `
-                <div class="alert alert-danger" role="alert">
-                    ${message}
-                </div>
-            `;
-        }
-        
-        // Play sound effect (mock implementation)
-        function playSound(soundType) {
-            // In a real implementation, you would play actual sound files
-            console.log(`Playing sound: ${soundType}`);
-        }
-        
-        // Event listeners
-        startButton.addEventListener('click', startAnimation);
-        skipButton.addEventListener('click', skipToResult);
-        
-        if (replayButton) {
-            replayButton.addEventListener('click', () => {
-                animationStarted = false;
-                startAnimation();
+            // Listen for animation complete
+            arcadeCanvas.addEventListener('arcade:animationComplete', function(event) {
+                animationInProgress = false;
+                if (startButton) {
+                    startButton.disabled = false;
+                    startButton.innerHTML = '<i class="fa fa-gamepad me-2" aria-hidden="true"></i> {% trans "Play Again" %}';
+                }
             });
         }
         
-        // Load entry data
-        loadEntryData();
+        // Start button handler
+        if (startButton) {
+            startButton.addEventListener('click', function() {
+                if (!animationInProgress && typeof ArcadeAnimation !== 'undefined') {
+                    ArcadeAnimation.startAnimation();
+                }
+            });
+        }
+        
+        // Load data when page loads
+        loadParticipantData();
     });
 </script>
 {% endblock %}

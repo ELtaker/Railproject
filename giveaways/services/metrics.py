@@ -10,6 +10,7 @@ This module provides utilities for tracking performance metrics for giveaway ope
 import time
 import logging
 import threading
+import functools
 from typing import Dict, Any, Optional, List, Callable
 from django.utils import timezone
 

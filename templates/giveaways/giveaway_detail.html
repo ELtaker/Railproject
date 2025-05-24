@@ -1,154 +1,275 @@
 {% extends 'base.html' %}
-{% block content %}
-
-{% block title %}{{ giveaway.title }}{% endblock %}
-
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/giveaway_detailpage.css' %}">
-<div class="giveaway-container mb-4">
-    <!-- Header Image -->
-    <div class="image-event-box">
-      {% if giveaway.image %}
-        <img class="header-image" src="{{ giveaway.image.url }}" id="prize-image" alt="Premiebilde">
-      {% else %}
-        <img class="header-image" src="{% static 'img/default_giveaway.png' %}" id="prize-image" alt="Premiebilde">
-      {% endif %}
-    </div>
-    <!-- Host Organizer Card -->
-    <div class="profile-card card shadow-sm border-1">
-      <div class="d-flex align-items-center">
-        {% if business.logo %}
-          <img src="{{ business.logo.url }}" class="host-logo-rounded rounded-circle" alt="{{ business.name }} logo">
-        {% endif %}
-        <div class="flex-grow-1">
-          <div class="host-name">{{ business.name }}</div>
-          <small class="text-muted">{{ business.city }}{% if business.postal_code %}, {{ business.postal_code }}{% endif %}</small>
-        </div>
-      </div>
-    </div>
-    <!-- Event Tags -->
-    <section class="event-tags">
-      <span class="tags-category">🎁 Giveaway</span>
-      <span class="tags-location">📍 {{ business.city }}{% if business.postal_code %}, {{ business.postal_code }}{% endif %}</span>
-    </section>
-    <!-- Event Title -->
-    <section>
-      <h1 class="h1">{{ giveaway.title }}</h1>
-    </section>
-    <!-- Accordion -->
-    <div class="accordion">
-      <details>
-        <summary>🔐 Competition Info</summary>
-        <p><strong>Organizer:</strong> {{ business.name }}</p>
-        <p><strong>Status:</strong> {% if giveaway.is_active %}✅ Active{% else %}❌ Not active{% endif %}</p>
-        <p><strong>Created:</strong> {{ giveaway.created_at|date:"d. M Y H:i" }}</p>
-      </details>
-    </div>
-    <!-- Event Details -->
-    <section class="details-box">
-      <div class="event-details">
-        <div class="info-row"><span class="h2">Premie</span></div>
-        <div class="info-row"><span class="highlight">Verdi:</span><span>{{ giveaway.prize_value|default:'?' }} NOK</span></div>
-        <div class="info-row"><span>Trekningsdato:</span><span>{{ giveaway.end_date|date:"d. M Y H:i" }}</span></div>
-        <div class="info-row"><span>Antall påmeldte:</span><span class="highlight">{{ entries_count }}</span></div>
-        <div class="info-row"><span>Antall vinnere:</span><span class="highlight">1</span></div>
-      </div>
-    </section>
-    <!-- Event Description -->
-    <section class="details-box">
-      <div class="event-details">
-        <div class="info-row"><span class="h2">Beskrivelse</span></div>
-        <p class="paragraph">{{ giveaway.description }}</p>
-      </div>
-    </section>
-    <!-- How to join -->
-    <section class="details-box">
-      <span class="h2">How to Participate?</span>
-      {% if messages %}
-        {% for message in messages %}
-          <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
-      {% if not request.user.is_authenticated %}
-        <div class="alert alert-warning text-center my-4">
-          <strong>You must be logged in as a member to participate in this giveaway.</strong><br>
-          <a class="btn btn-primary mt-3" href="{% url 'accounts:member-login' %}?next={{ request.path }}">Log in or register</a>
-        </div>
-      {% elif is_member %}
-        {% if has_joined %}
-          <div class="alert alert-success text-center my-4">
-            <strong>You are registered!</strong>
-          </div>
-          <button class="btn btn-success w-100" disabled>Registered</button>
-        {% elif can_participate and entry_form %}
-          <form method="post" class="mt-3" id="entry-form">
-            {% csrf_token %}
-            {% if giveaway.signup_question %}
-              <h4>{{ giveaway.signup_question }}</h4>
-            {% endif %}
-            {{ entry_form.answer.errors }}
-            {{ entry_form.user_location_city }}
-            <div class="mb-3">
-              <div class="alert alert-info">
-                <i class="bi bi-geo-alt"></i> Your registered location: <strong>{{ request.user.city }}</strong>
-                <small class="d-block mt-1">Note: Your registered location must match the business location ({{ business.city }}) to participate.</small>
-              </div>
-            </div>
-            {% for radio in entry_form.answer %}
-              <div class="form-check mt-3 my-1 mx-4">
-                {{ radio.tag }}
-                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
-              </div>
-            {% endfor %}
-            <div class="giveaway-submit text-center my-4 mx-4">
-              <button class="btn btn-primary" type="submit">Participate for free</button>
-            </div>
 
-            {% if entry_form.non_field_errors %}
-              <div class="alert alert-danger">{{ entry_form.non_field_errors }}</div>
+{% block title %}{{ giveaway.title }} | Raildrops{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- Giveaway Header with Image, Status, and Business Info -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+        <!-- Header Image with Overlay -->
+        <div class="position-relative">
+            {% if giveaway.image %}
+                <img src="{{ giveaway.image.url }}" class="card-img-top" alt="{{ giveaway.title }}" style="height: 280px; object-fit: cover;">
+            {% else %}
+                <img src="{% static 'img/default_giveaway.png' %}" class="card-img-top" alt="{{ giveaway.title }}" style="height: 280px; object-fit: cover;">
             {% endif %}
-          </form>
-          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-              // Get current user city from profile
-              const userProfileCity = "{{ request.user.city|default:'' }}";
-              const businessCity = "{{ business.city }}";
-              
-              // Only use geolocation if user hasn't set a city in their profile
-              // or if their current city doesn't match the business city
-              const shouldUseGeolocation = !userProfileCity || 
-                                         userProfileCity.toLowerCase() !== businessCity.toLowerCase();
-              
-              if (shouldUseGeolocation && navigator.geolocation) {
-                // Display a message that we're checking their location
-                const locationInfo = document.querySelector('.alert-info');
-                if (locationInfo) {
-                  locationInfo.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"></div> Checking your location...';
-                }
-                
-                navigator.geolocation.getCurrentPosition(function(position) {
-                  const lat = position.coords.latitude;
-                  const lon = position.coords.longitude;
-                  
-                  // Use OpenStreetMap Nominatim for reverse geocoding
-                  fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`)
-                    .then(response => response.json())
-                    .then(data => {
-                      // Get city from the response data
-                      let city = data.address.city || data.address.town || data.address.village || data.address.hamlet || data.address.municipality;
-                      if (!city && data.address.county) city = data.address.county;
-                      
-                      if (city) {
-                        // Check if the detected city matches profile city
-                        if (userProfileCity && userProfileCity.toLowerCase() === city.toLowerCase()) {
-                          // No need to update if they match
-                          if (locationInfo) {
-                            locationInfo.innerHTML = `<i class="bi bi-geo-alt"></i> Your registered location: <strong>${userProfileCity}</strong><small class="d-block mt-1">Note: Your registered location must match the business location (${businessCity}) to participate.</small>`;
-                          }
-                          return;
-                        }
+            
+            <!-- Status Badge Overlay -->
+            <div class="position-absolute top-0 end-0 m-3">
+                {% if giveaway.is_active %}
+                    <span class="badge bg-success px-3 py-2 rounded-pill shadow-sm">
+                        <i class="fa fa-check-circle me-1" aria-hidden="true"></i> Active
+                    </span>
+                {% else %}
+                    <span class="badge bg-secondary px-3 py-2 rounded-pill shadow-sm">
+                        <i class="fa fa-times-circle me-1" aria-hidden="true"></i> Ended
+                    </span>
+                {% endif %}
+            </div>
+            
+            <!-- Location Badge Overlay -->
+            <div class="position-absolute bottom-0 start-0 m-3">
+                <span class="badge bg-dark bg-opacity-75 px-3 py-2 rounded-pill shadow-sm">
+                    <i class="fa fa-map-marker-alt me-1" aria-hidden="true"></i> {{ business.city }}{% if business.postal_code %}, {{ business.postal_code }}{% endif %}
+                </span>
+            </div>
+        </div>
+        
+        <!-- Business Info Card -->
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+                {% if business.logo %}
+                    <img src="{{ business.logo.url }}" class="rounded-circle me-3" alt="{{ business.name }} logo" width="64" height="64">
+                {% else %}
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 64px; height: 64px;">
+                        <i class="fa fa-building fa-2x text-secondary"></i>
+                    </div>
+                {% endif %}
+                <div>
+                    <h5 class="card-title mb-1">{{ business.name }}</h5>
+                    <p class="card-text text-muted mb-0">
+                        <i class="fa fa-map-marker-alt me-1" aria-hidden="true"></i> {{ business.city }}{% if business.postal_code %}, {{ business.postal_code }}{% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <h1 class="display-6 fw-bold mb-3">{{ giveaway.title }}</h1>
+            
+            <!-- Created Date -->
+            <p class="text-muted">
+                <i class="fa fa-calendar-alt me-1" aria-hidden="true"></i> Created: {{ giveaway.created_at|date:"d. M Y H:i" }}
+            </p>
+        </div>
+    </div>
+    <!-- Prize Information Card -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-header bg-light">
+            <h2 class="h4 mb-0">Premie</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-bottom">
+                            <span>
+                                <i class="fa fa-tag text-primary me-2" aria-hidden="true"></i> Verdi
+                            </span>
+                            <span class="badge bg-primary rounded-pill px-3 py-2 fw-bold">{{ giveaway.prize_value|default:'?' }} NOK</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-bottom">
+                            <span>
+                                <i class="fa fa-calendar-alt text-danger me-2" aria-hidden="true"></i> Trekningsdato
+                            </span>
+                            <span class="fw-semibold">{{ giveaway.end_date|date:"d. M Y H:i" }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-bottom">
+                            <span>
+                                <i class="fa fa-users text-success me-2" aria-hidden="true"></i> Antall påmeldte
+                            </span>
+                            <span class="badge bg-success rounded-pill px-3 py-2 fw-bold">{{ entries_count }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-bottom">
+                            <span>
+                                <i class="fa fa-trophy text-warning me-2" aria-hidden="true"></i> Antall vinnere
+                            </span>
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2 fw-bold">1</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description Card -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-header bg-light">
+            <h2 class="h4 mb-0">Beskrivelse</h2>
+        </div>
+        <div class="card-body">
+            <p class="lead mb-0">{{ giveaway.description }}</p>
+        </div>
+    </div>
+    <!-- Participation Card -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h2 class="h4 mb-0">How to Participate?</h2>
+            {% if giveaway.is_active %}
+                <span class="badge bg-success rounded-pill">
+                    <i class="fa fa-clock me-1" aria-hidden="true"></i> Open
+                </span>
+            {% else %}
+                <span class="badge bg-secondary rounded-pill">
+                    <i class="fa fa-clock me-1" aria-hidden="true"></i> Closed
+                </span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% if not request.user.is_authenticated %}
+                <!-- Not Logged In -->
+                <div class="alert alert-warning text-center my-4">
+                    <i class="fa fa-exclamation-triangle me-2" aria-hidden="true"></i>
+                    <strong>You must be logged in as a member to participate in this giveaway.</strong>
+                    <div class="mt-3">
+                        <a class="btn btn-primary" href="{% url 'accounts:member-login' %}?next={{ request.path }}">
+                            <i class="fa fa-sign-in-alt me-2" aria-hidden="true"></i> Log in or register
+                        </a>
+                    </div>
+                </div>
+            {% elif is_member %}
+                {% if has_joined %}
+                    <!-- Already Joined -->
+                    <div class="text-center my-4">
+                        <div class="alert alert-success mb-3">
+                            <i class="fa fa-check-circle fa-2x me-2" aria-hidden="true"></i>
+                            <strong>You are registered!</strong>
+                        </div>
+                        <p class="text-muted mb-3">Good luck in the drawing on {{ giveaway.end_date|date:"d. M Y H:i" }}</p>
+                        <button class="btn btn-success btn-lg w-100" disabled>
+                            <i class="fa fa-check me-2" aria-hidden="true"></i> Registered
+                        </button>
+                    </div>
+                {% elif can_participate and entry_form %}
+                    <!-- Participation Form -->
+                    <form method="post" class="mt-3" id="entry-form">
+                        {% csrf_token %}
+                        {{ entry_form.user_location_city }}
                         
-                        // Don't update if user already set their city in profile
+                        <!-- Location Check -->
+                        <div class="mb-4">
+                            <div class="alert alert-info d-flex align-items-start">
+                                <i class="fa fa-map-marker-alt fa-lg me-3 mt-1" aria-hidden="true"></i>
+                                <div>
+                                    <strong>Your registered location:</strong> {{ request.user.city }}
+                                    <small class="d-block mt-1">Note: Your registered location must match the business location ({{ business.city }}) to participate.</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Question -->
+                        {% if giveaway.signup_question %}
+                            <div class="mb-4">
+                                <h4 class="h5 mb-3">{{ giveaway.signup_question }}</h4>
+                                {% if entry_form.answer.errors %}
+                                    <div class="alert alert-danger">
+                                        {{ entry_form.answer.errors }}
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="list-group mb-3">
+                                    {% for radio in entry_form.answer %}
+                                        <label class="list-group-item list-group-item-action py-3 d-flex gap-3">
+                                            {{ radio.tag }}
+                                            <span class="pt-1">{{ radio.choice_label }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button class="btn btn-primary btn-lg" type="submit">
+                                <i class="fa fa-paper-plane me-2" aria-hidden="true"></i> Participate for free
+                            </button>
+                        </div>
+
+                        {% if entry_form.non_field_errors %}
+                            <div class="alert alert-danger mt-3">
+                                {{ entry_form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                    </form>
+                    <script>
+                      document.addEventListener('DOMContentLoaded', function() {
+                        // Get current user city from profile
+                        const userProfileCity = "{{ request.user.city|default:'' }}";
+                        const businessCity = "{{ business.city }}";
+                        
+                        // Only use geolocation if user hasn't set a city in their profile
+                        // or if their current city doesn't match the business city
+                        const shouldUseGeolocation = !userProfileCity || 
+                                                   userProfileCity.toLowerCase() !== businessCity.toLowerCase();
+                        
+                        if (shouldUseGeolocation && navigator.geolocation) {
+                          // Display a message that we're checking their location
+                          const locationInfo = document.querySelector('.alert-info');
+                          if (locationInfo) {
+                            const oldContent = locationInfo.innerHTML;
+                            locationInfo.innerHTML = `
+                              <div class="d-flex align-items-center">
+                                <div class="spinner-border spinner-border-sm text-primary me-3" role="status">
+                                  <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div>Checking your current location...</div>
+                              </div>
+                            `;
+                          }
+                          
+                          navigator.geolocation.getCurrentPosition(function(position) {
+                            const lat = position.coords.latitude;
+                            const lon = position.coords.longitude;
+                            
+                            // Use OpenStreetMap Nominatim for reverse geocoding
+                            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`)
+                              .then(response => response.json())
+                              .then(data => {
+                                // Get city from the response data
+                                let city = data.address.city || data.address.town || data.address.village || data.address.hamlet || data.address.municipality;
+                                if (!city && data.address.county) city = data.address.county;
+                                
+                                if (city) {
+                                  // Check if the detected city matches profile city
+                                  if (userProfileCity && userProfileCity.toLowerCase() === city.toLowerCase()) {
+                                    // No need to update if they match
+                                    if (locationInfo) {
+                                      locationInfo.innerHTML = `
+                                        <div class="d-flex align-items-start">
+                                          <i class="fa fa-map-marker-alt fa-lg me-3 mt-1" aria-hidden="true"></i>
+                                          <div>
+                                            <strong>Your registered location:</strong> ${userProfileCity}
+                                            <small class="d-block mt-1">Note: Your registered location must match the business location (${businessCity}) to participate.</small>
+                                          </div>
+                                        </div>
+                                      `;
+                                    }
+                                    return;
+                                  }
+                                  
+                                  // Don't update if user already set their city in profile
                         if (userProfileCity) {
                           if (locationInfo) {
                             locationInfo.innerHTML = `<i class="bi bi-geo-alt"></i> Your registered location: <strong>${userProfileCity}</strong><small class="d-block mt-1">Note: Your registered location must match the business location (${businessCity}) to participate.</small>`;

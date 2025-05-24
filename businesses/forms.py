@@ -277,3 +277,33 @@ class BusinessForm(forms.ModelForm):
                 'max_length': _('Stedsnavn kan ikke være lengre enn 64 tegn')
             }
         }
+        
+    def save(self, commit=True):
+        """
+        Override save method to sync city information with associated User model.
+        
+        This ensures data consistency between Business and User models,
+        which improves UX and prevents bugs in location-based features.
+        
+        Args:
+            commit: Whether to save the model instance to the database
+            
+        Returns:
+            Business: The updated business instance
+        """
+        business = super().save(commit=False)
+        
+        # Get the city from the form data
+        city = self.cleaned_data.get('city', '')
+        
+        # Update the associated user's city as well
+        if business.user and hasattr(business.user, 'city'):
+            business.user.city = city
+            if commit:
+                business.user.save()
+                logger.info(f"Synced city '{city}' to user {business.user.email}")
+        
+        if commit:
+            business.save()
+            
+        return business

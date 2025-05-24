@@ -17,11 +17,24 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 def normalize_city(city: str) -> str:
+    """Normalize city name for consistent comparison.
+    
+    Removes accents, spaces, case sensitivity, and special characters.
+    
+    Args:
+        city: The city name to normalize
+        
+    Returns:
+        Normalized city name for comparison
+    """
     if not city:
         return ""
     city = city.lower().strip()
     city = unicodedata.normalize('NFKD', city)
+    # Remove all non-alphanumeric characters
     city = ''.join(c for c in city if c.isalnum())
+    # Log the normalization for debugging
+    logger.debug(f"Normalized city: '{city}'")
     return city
 
 def cities_match(user_city: str, giveaway_city: str) -> bool:
@@ -40,7 +53,17 @@ def validate_entry(user, giveaway, user_city: str, answer: str) -> dict:
     
     # IMPORTANT: Users must be in the same city as the business to participate
     # This is a vital function for Raildrops
-    if not cities_match(user_city, giveaway.business.city):
+    normalized_user_city = normalize_city(user_city)
+    normalized_business_city = normalize_city(giveaway.business.city)
+    
+    # Log the normalization for debugging
+    logger.info(f"Comparing user city '{user_city}' ({normalized_user_city}) with business city '{giveaway.business.city}' ({normalized_business_city})")
+    
+    if not normalized_user_city:
+        # Edge case: Empty normalized city
+        return {"success": False, "error": f"Invalid city format: {user_city}. Please update your profile with a valid city."}
+    
+    if normalized_user_city != normalized_business_city:
         # Create a more informative error message
         return {
             "success": False, 
@@ -50,7 +73,7 @@ def validate_entry(user, giveaway, user_city: str, answer: str) -> dict:
     # Log successful location match
     logger.info(f"Approved position: {user_city} matches {giveaway.business.city}")
     
-    return {"success": True, "normalized_city": normalize_city(user_city)}
+    return {"success": True, "normalized_city": normalized_user_city}
 
 
 def select_random_winner(giveaway_id: int) -> Dict[str, Any]:

@@ -21,6 +21,60 @@ from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from celery.result import AsyncResult
+from django.shortcuts import render
+
+from .models import Giveaway, Winner
+
+
+class GiveawayWinnerView(DetailView):
+    """View for displaying the winner of a giveaway.
+    
+    This view shows the details of the winner for a completed giveaway.
+    It displays the winner's information and the giveaway details.
+    
+    Attributes:
+        model (Model): The Giveaway model class
+        template_name (str): Path to the template for rendering the view
+        context_object_name (str): Name of the giveaway object in the template context
+    """
+    model = Giveaway
+    template_name = 'giveaways/giveaway_winner.html'
+    context_object_name = 'giveaway'
+    
+    def get_context_data(self, **kwargs):
+        """Get the context data for rendering the template.
+        
+        Adds winner information to the context if a winner exists.
+        
+        Args:
+            **kwargs: Additional context variables
+            
+        Returns:
+            dict: The context dictionary with giveaway and winner information
+        """
+        context = super().get_context_data(**kwargs)
+        giveaway = self.get_object()
+        context['business'] = giveaway.business
+        
+        # Get winner information if available
+        try:
+            winner = Winner.objects.get(giveaway=giveaway)
+            context['winner'] = winner
+            # Get the winner's entry to show their answer
+            winner_entry = winner.get_entry()
+            if winner_entry:
+                context['winner_entry'] = winner_entry
+        except Winner.DoesNotExist:
+            context['no_winner_yet'] = True
+        
+        # Include the total number of entries
+        context['entries_count'] = giveaway.entry_count()
+        
+        # Check if the current user participated
+        if self.request.user.is_authenticated:
+            context['has_joined'] = giveaway.entries.filter(user=self.request.user).exists()
+        
+        return context
 
 
 class GiveawayAnimationDataView(View):
@@ -115,7 +169,7 @@ class WinnerAnimationView(DetailView):
     demonstrates the random selection process for a giveaway winner.
     """
     model = Giveaway
-    template_name = 'giveaways/winner_animation.html'
+    template_name = 'giveaways/giveaway_winner_animation.html'
     context_object_name = 'giveaway'
     
     def get_context_data(self, **kwargs):
@@ -123,20 +177,24 @@ class WinnerAnimationView(DetailView):
         giveaway = self.get_object()
         
         # Check if this giveaway has a winner
-        has_winner = hasattr(giveaway, 'winner')
-        context['has_winner'] = has_winner
-        
-        if has_winner:
-            winner = giveaway.winner
+        try:
+            winner = Winner.objects.get(giveaway=giveaway)
+            context['winner'] = winner
+            # Get the winner's entry to show their answer
             winner_entry = winner.get_entry()
+            if winner_entry:
+                context['winner_entry'] = winner_entry
             
-            # Add winner data to context
-            context['winner'] = {
-                'first_name': winner.user.first_name,
-                'last_name': winner.user.last_name,
-                'selected_at': winner.selected_at,
-                'answer': winner_entry.answer if winner_entry else None
-            }
+            # Get all entries for the animation
+            entries = giveaway.entries.all().select_related('user')
+            context['entries'] = entries
+            context['entries_count'] = entries.count()
+            
+        except Winner.DoesNotExist:
+            context['no_winner_yet'] = True
+        
+        # Add business info
+        context['business'] = giveaway.business
         
         return context
 
@@ -746,13 +804,6 @@ class GiveawayCreateView(LoginRequiredMixin, BusinessOnlyMixin, BusinessContextM
             
             # Set the business before saving
             form.instance.business = business
-            
-            # Set default business location if none provided
-            if not form.instance.business_location_city and business.city:
-                form.instance.business_location_city = business.city
-                
-            if not form.instance.business_location_postal_code and business.postal_code:
-                form.instance.business_location_postal_code = business.postal_code
             
             # Log the creation
             response = super().form_valid(form)
